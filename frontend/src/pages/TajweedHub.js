@@ -70,7 +70,7 @@ export default function TajweedHub() {
         >
           <option value="">Choose a Surah...</option>
           {surahs.map(s => (
-            <option key={s.id} value={s.id}>{s.id}. {s.name_simple} ({s.name_arabic})</option>
+            <option key={s.id} value={s.id}>{s.id}. {s.name_simple}</option>
           ))}
         </select>
 
