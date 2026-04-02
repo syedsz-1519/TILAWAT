@@ -20,21 +20,21 @@ function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="h-screen flex overflow-hidden bg-[#070a0f]">
+    <div className="h-screen flex overflow-hidden bg-[#111116]">
       <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
 
       {/* Main Content */}
       <div className="flex-1 lg:ml-80 flex flex-col min-h-screen overflow-hidden">
         {/* Mobile Header */}
-        <div className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-[#c8943f]/15 bg-[#070a0f] shrink-0">
+        <div className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-[#E6C364]/10 bg-[#111116]/80 backdrop-blur-xl shrink-0">
           <button
             data-testid="mobile-menu-btn"
             onClick={() => setSidebarOpen(true)}
-            className="text-[#8b95a5] hover:text-[#c8943f] transition-colors"
+            className="text-[#9a9a9a] hover:text-[#E6C364] transition-colors"
           >
             <Menu size={22} />
           </button>
-          <h1 className="text-lg font-light tracking-[0.2em] text-[#c8943f]">TILAWA</h1>
+          <h1 className="text-lg font-bold tracking-[0.15em] text-[#E6C364] font-['Noto_Serif']">TILAWA</h1>
           <div className="w-6" />
         </div>
 
