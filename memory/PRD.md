@@ -26,11 +26,14 @@ Build TILAWA — a research-grade Islamic EdTech web platform for Quran learning
 ## What's Been Implemented (Phase 1 MVP — April 2, 2026)
 - **Mushaf Reader**: Full surah list, verse display with Amiri Quran font, word-by-word audio highlighting, audio player bar with play/pause/seek/volume/speed/repeat
 - **Search**: Text search with results from Quran.com API fallback
-- **Tajweed Practice**: Mock recording UI with simulated word-level scoring, tajweed rules reference
+- **Tajweed Practice**: Mock recording UI with SVG score ring, XP badges, detailed word-level error analysis panel
+- **Tajweed Rules Library**: 9 rules with category tabs (Noon Sakinah, Meem Sakinah, Madd, Qalqalah), individual rule detail pages with overview, examples, practice tips
+- **Tajweed Quiz**: 8-question multiple-choice engine with progress bar, explanations, score results
+- **Dashboard**: Hifdh Journey with streak counter, XP tracking, accuracy stats, surah progress cards, Tajweed mastery progress
 - **Bookmarks**: Create, list, delete bookmarks
 - **Audio**: Chapter-level audio from QDC with word-level timestamp sync
 - **Backend**: FastAPI proxy caching Quran.com API data in MongoDB
-- **Design**: Dark theme, gold accents, RTL Arabic text, responsive layout
+- **Design**: Dark theme matching Google Stitch template, gold accents, RTL Arabic text, responsive layout
 
 ## Prioritized Backlog
 ### P0 (Next Phase)
