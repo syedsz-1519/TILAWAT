@@ -1,53 +1,68 @@
-import { useEffect } from "react";
+import React, { useState } from "react";
 import "@/App.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import axios from "axios";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AudioProvider } from "@/lib/AudioContext";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import Sidebar from "@/components/layout/Sidebar";
+import AudioBar from "@/components/layout/AudioBar";
+import MushafHome from "@/pages/MushafHome";
+import MushafReader from "@/pages/MushafReader";
+import SearchPage from "@/pages/SearchPage";
+import TajweedHub from "@/pages/TajweedHub";
+import TajweedSession from "@/pages/TajweedSession";
+import BookmarksPage from "@/pages/BookmarksPage";
+import { Menu } from "lucide-react";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
-const API = `${BACKEND_URL}/api`;
-
-const Home = () => {
-  const helloWorldApi = async () => {
-    try {
-      const response = await axios.get(`${API}/`);
-      console.log(response.data.message);
-    } catch (e) {
-      console.error(e, `errored out requesting / api`);
-    }
-  };
-
-  useEffect(() => {
-    helloWorldApi();
-  }, []);
+function AppLayout() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
+    <div className="h-screen flex overflow-hidden bg-[#070a0f]">
+      <Sidebar isOpen={sidebarOpen} onToggle={() => setSidebarOpen(!sidebarOpen)} />
+
+      {/* Main Content */}
+      <div className="flex-1 lg:ml-80 flex flex-col min-h-screen overflow-hidden">
+        {/* Mobile Header */}
+        <div className="lg:hidden flex items-center justify-between px-4 py-3 border-b border-[#c8943f]/15 bg-[#070a0f] shrink-0">
+          <button
+            data-testid="mobile-menu-btn"
+            onClick={() => setSidebarOpen(true)}
+            className="text-[#8b95a5] hover:text-[#c8943f] transition-colors"
+          >
+            <Menu size={22} />
+          </button>
+          <h1 className="text-lg font-light tracking-[0.2em] text-[#c8943f]">TILAWA</h1>
+          <div className="w-6" />
+        </div>
+
+        {/* Scrollable Content */}
+        <main className="flex-1 overflow-y-auto">
+          <Routes>
+            <Route path="/" element={<MushafHome />} />
+            <Route path="/mushaf/:surahId" element={<MushafReader />} />
+            <Route path="/search" element={<SearchPage />} />
+            <Route path="/tajweed" element={<TajweedHub />} />
+            <Route path="/tajweed/session/:verseKey" element={<TajweedSession />} />
+            <Route path="/bookmarks" element={<BookmarksPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </main>
+      </div>
+
+      <AudioBar />
     </div>
   );
-};
+}
 
 function App() {
   return (
-    <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Home />}>
-            <Route index element={<Home />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </div>
+    <TooltipProvider>
+      <AudioProvider>
+        <BrowserRouter>
+          <AppLayout />
+        </BrowserRouter>
+      </AudioProvider>
+    </TooltipProvider>
   );
 }
 

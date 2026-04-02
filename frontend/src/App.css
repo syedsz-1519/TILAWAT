@@ -1,34 +1,101 @@
-.App-logo {
-    height: 40vmin;
-    pointer-events: none;
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse-gold {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(200, 148, 63, 0.4); }
+  50% { box-shadow: 0 0 0 12px rgba(200, 148, 63, 0); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-    .App-logo {
-        animation: App-logo-spin infinite 20s linear;
-    }
+.animate-fadeIn {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+.animate-slideUp {
+  animation: slideUp 0.6s ease-out forwards;
+}
+.animate-pulse-gold {
+  animation: pulse-gold 2s ease-in-out infinite;
 }
 
-.App-header {
-    background-color: #0f0f10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    font-size: calc(10px + 2vmin);
-    color: white;
+/* Stagger children */
+.stagger-children > * {
+  opacity: 0;
+  animation: fadeIn 0.4s ease-out forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 0.05s; }
+.stagger-children > *:nth-child(2) { animation-delay: 0.1s; }
+.stagger-children > *:nth-child(3) { animation-delay: 0.15s; }
+.stagger-children > *:nth-child(4) { animation-delay: 0.2s; }
+.stagger-children > *:nth-child(5) { animation-delay: 0.25s; }
+.stagger-children > *:nth-child(6) { animation-delay: 0.3s; }
+.stagger-children > *:nth-child(7) { animation-delay: 0.35s; }
+.stagger-children > *:nth-child(8) { animation-delay: 0.4s; }
+
+/* Skeleton loader */
+.skeleton {
+  background: linear-gradient(90deg, #0d131f 25%, #161e2e 50%, #0d131f 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
 }
 
-.App-link {
-    color: #61dafb;
+/* Verse number ornament */
+.verse-badge {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-family: 'Outfit', sans-serif;
+  color: var(--gold);
+  border: 1px solid rgba(200, 148, 63, 0.3);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+}
+.verse-badge span {
+  transform: rotate(-45deg);
 }
 
-@keyframes App-logo-spin {
-    from {
-        transform: rotate(0deg);
-    }
-    to {
-        transform: rotate(360deg);
-    }
+/* Progress bar track */
+.progress-track {
+  position: relative;
+  height: 4px;
+  background: #0d131f;
+  cursor: pointer;
+  transition: height 0.15s ease;
+}
+.progress-track:hover {
+  height: 6px;
+}
+.progress-fill {
+  height: 100%;
+  background: var(--gold);
+  transition: width 0.1s linear;
+  position: relative;
+}
+.progress-fill::after {
+  content: '';
+  position: absolute;
+  right: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 10px;
+  background: var(--gold);
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.progress-track:hover .progress-fill::after {
+  opacity: 1;
 }
