@@ -10,7 +10,10 @@ import MushafReader from "@/pages/MushafReader";
 import SearchPage from "@/pages/SearchPage";
 import TajweedHub from "@/pages/TajweedHub";
 import TajweedSession from "@/pages/TajweedSession";
+import TajweedRuleDetail from "@/pages/TajweedRuleDetail";
+import TajweedQuiz from "@/pages/TajweedQuiz";
 import BookmarksPage from "@/pages/BookmarksPage";
+import Dashboard from "@/pages/Dashboard";
 import { Menu } from "lucide-react";
 
 function AppLayout() {
@@ -43,7 +46,10 @@ function AppLayout() {
             <Route path="/search" element={<SearchPage />} />
             <Route path="/tajweed" element={<TajweedHub />} />
             <Route path="/tajweed/session/:verseKey" element={<TajweedSession />} />
+            <Route path="/tajweed/rule/:ruleId" element={<TajweedRuleDetail />} />
+            <Route path="/tajweed/quiz" element={<TajweedQuiz />} />
             <Route path="/bookmarks" element={<BookmarksPage />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </main>

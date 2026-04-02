@@ -153,15 +153,32 @@ class TilawaAPITester:
         return success
 
     def test_tajweed_rules(self):
-        """Test tajweed rules endpoint"""
-        success, data = self.run_test("Get Tajweed Rules", "GET", "/tajweed/rules", 200)
+        """Test enhanced tajweed rules endpoint (Iteration 2)"""
+        success, data = self.run_test("Get Enhanced Tajweed Rules", "GET", "/tajweed/rules", 200)
         if success:
             rules = data.get("rules", [])
-            if len(rules) == 7:
-                self.log(f"✅ Correct number of tajweed rules: {len(rules)}")
+            if len(rules) >= 9:
+                self.log(f"✅ Enhanced tajweed rules count: {len(rules)}")
+                
+                # Check for enhanced fields (Iteration 2)
+                first_rule = rules[0]
+                enhanced_fields = ['category', 'overview', 'practice_tip']
+                for field in enhanced_fields:
+                    if field in first_rule:
+                        self.log(f"✅ Enhanced field '{field}' present")
+                    else:
+                        self.log(f"❌ Missing enhanced field '{field}'")
+                
+                # Test specific rule details
+                test_rules = ['ikhfa', 'idgham', 'iqlab', 'qalqalah']
+                for rule_id in test_rules:
+                    rule_success, rule_data = self.run_test(f"Get Rule Detail ({rule_id})", "GET", f"/tajweed/rules/{rule_id}", 200)
+                    if rule_success and 'overview' in rule_data and 'practice_tip' in rule_data:
+                        self.log(f"✅ Rule {rule_id} has enhanced details")
+                
                 return True, data
             else:
-                self.log(f"❌ Expected 7 tajweed rules, got {len(rules)}")
+                self.log(f"❌ Expected 9+ tajweed rules, got {len(rules)}")
         return success, data
 
     def test_tajweed_session(self):
@@ -179,6 +196,52 @@ class TilawaAPITester:
     def test_reciters_endpoint(self):
         """Test reciters endpoint"""
         return self.run_test("Get Reciters", "GET", "/reciters", 200)
+
+    def test_dashboard_stats(self):
+        """Test dashboard stats endpoint (Iteration 2)"""
+        success, data = self.run_test("Get Dashboard Stats", "GET", "/dashboard/stats", 200)
+        if success:
+            required_fields = ['streak_days', 'xp_total', 'average_score', 'rules_mastered']
+            for field in required_fields:
+                if field in data:
+                    self.log(f"✅ Dashboard field '{field}': {data[field]}")
+                else:
+                    self.log(f"❌ Missing dashboard field '{field}'")
+                    return False, data
+        return success, data
+
+    def test_quiz_features(self):
+        """Test quiz endpoints (Iteration 2)"""
+        # Test quiz questions
+        success, questions_data = self.run_test("Get Quiz Questions", "GET", "/quiz/questions", 200)
+        if success:
+            questions = questions_data.get("questions", [])
+            if len(questions) == 8:
+                self.log(f"✅ Quiz questions count: {len(questions)}")
+                
+                # Verify questions don't include correct answers
+                first_q = questions[0]
+                if 'correct' not in first_q:
+                    self.log("✅ Questions properly exclude correct answers")
+                else:
+                    self.log("❌ Questions should not include correct answers")
+                
+                # Test quiz submission
+                sample_answers = {"1": "A", "2": "B", "3": "C", "4": "D"}
+                submit_success, submit_data = self.run_test("Submit Quiz", "POST", "/quiz/submit", 200, 
+                                                          data={"answers": sample_answers})
+                if submit_success:
+                    required_fields = ['score', 'percentage', 'xp_earned', 'results']
+                    for field in required_fields:
+                        if field in submit_data:
+                            self.log(f"✅ Quiz result field '{field}': {submit_data[field]}")
+                        else:
+                            self.log(f"❌ Missing quiz result field '{field}'")
+                
+                return submit_success, submit_data
+            else:
+                self.log(f"❌ Expected 8 quiz questions, got {len(questions)}")
+        return success, questions_data
 
     def run_all_tests(self):
         """Run all backend tests"""
@@ -210,6 +273,10 @@ class TilawaAPITester:
         
         # Test reciters
         self.test_reciters_endpoint()
+        
+        # Test new Iteration 2 features
+        self.test_dashboard_stats()
+        self.test_quiz_features()
         
         # Print summary
         self.log("\n" + "="*50)

@@ -1,7 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Mic, ChevronRight } from "lucide-react";
+import { Mic, ChevronRight, BookOpen, Award, Search, Volume2 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import api from "@/lib/api";
+
+const CATEGORIES = [
+  { id: "all", label: "All" },
+  { id: "noon_sakinah", label: "Noon Sakinah" },
+  { id: "meem_sakinah", label: "Meem Sakinah" },
+  { id: "madd", label: "Madd Rules" },
+  { id: "qalqalah", label: "Qalqalah" },
+];
 
 export default function TajweedHub() {
   const [rules, setRules] = useState([]);
@@ -9,6 +19,7 @@ export default function TajweedHub() {
   const [selectedSurah, setSelectedSurah] = useState(null);
   const [verses, setVerses] = useState([]);
   const [loadingVerses, setLoadingVerses] = useState(false);
+  const [activeTab, setActiveTab] = useState("all");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,43 +36,124 @@ export default function TajweedHub() {
     }).catch(() => setLoadingVerses(false));
   }, [selectedSurah]);
 
+  const filteredRules = activeTab === "all" ? rules : rules.filter(r => r.category === activeTab);
+
   return (
-    <div data-testid="tajweed-hub" className="max-w-4xl mx-auto px-4 sm:px-8 py-12">
+    <div data-testid="tajweed-hub" className="max-w-5xl mx-auto px-4 sm:px-8 py-12 pb-32">
       {/* Header */}
-      <div className="text-center mb-12">
-        <div className="w-16 h-16 mx-auto mb-4 flex items-center justify-center border border-[#c8943f]/30 bg-[#c8943f]/10 rounded-full">
-          <Mic size={24} className="text-[#c8943f]" />
-        </div>
-        <h1 className="text-3xl sm:text-4xl font-light text-[#fdfbf7] mb-2">Tajweed Practice</h1>
-        <p className="text-sm text-[#8b95a5]">Select a verse to practice your recitation</p>
+      <div className="mb-10">
+        <p className="text-[11px] tracking-[0.2em] text-[#c8943f] uppercase mb-2">Tajweed Library</p>
+        <h1 className="text-3xl sm:text-4xl font-light text-[#fdfbf7] mb-2">Knowledge Seekers</h1>
+        <p className="text-sm text-[#8b95a5]">Explore the art of recitation through our curated repository of Tajweed scholarship</p>
       </div>
 
-      {/* Tajweed Rules */}
-      <div className="mb-12">
-        <h2 className="text-sm text-[#8b95a5] tracking-widest uppercase mb-4">Tajweed Rules</h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-          {rules.map(rule => (
-            <div
-              key={rule.id}
-              data-testid={`tajweed-rule-${rule.id}`}
-              className="bg-[#0d131f] border border-[#c8943f]/15 p-4 hover:border-[#c8943f]/30 transition-all"
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10">
+        <button data-testid="tajweed-quiz-btn" onClick={() => navigate("/tajweed/quiz")}
+          className="bg-[#0d131f] border border-[#c8943f]/15 p-5 flex items-center gap-3 hover:border-[#c8943f]/30 transition-all group">
+          <div className="w-10 h-10 flex items-center justify-center bg-[#9B59B6]/10 border border-[#9B59B6]/30 rounded-full shrink-0">
+            <Award size={16} className="text-[#9B59B6]" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm text-[#fdfbf7] group-hover:text-[#c8943f] transition-colors">Take Quiz</p>
+            <p className="text-[10px] text-[#8b95a5]">Test your knowledge</p>
+          </div>
+        </button>
+        <button data-testid="tajweed-dashboard-btn" onClick={() => navigate("/dashboard")}
+          className="bg-[#0d131f] border border-[#c8943f]/15 p-5 flex items-center gap-3 hover:border-[#c8943f]/30 transition-all group">
+          <div className="w-10 h-10 flex items-center justify-center bg-[#2ECC71]/10 border border-[#2ECC71]/30 rounded-full shrink-0">
+            <BookOpen size={16} className="text-[#2ECC71]" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm text-[#fdfbf7] group-hover:text-[#c8943f] transition-colors">Dashboard</p>
+            <p className="text-[10px] text-[#8b95a5]">Track your progress</p>
+          </div>
+        </button>
+        <button data-testid="tajweed-practice-btn" onClick={() => document.getElementById("practice-section")?.scrollIntoView({ behavior: "smooth" })}
+          className="bg-[#0d131f] border border-[#c8943f]/15 p-5 flex items-center gap-3 hover:border-[#c8943f]/30 transition-all group">
+          <div className="w-10 h-10 flex items-center justify-center bg-[#c8943f]/10 border border-[#c8943f]/30 rounded-full shrink-0">
+            <Mic size={16} className="text-[#c8943f]" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm text-[#fdfbf7] group-hover:text-[#c8943f] transition-colors">Practice</p>
+            <p className="text-[10px] text-[#8b95a5]">Record a verse</p>
+          </div>
+        </button>
+      </div>
+
+      {/* Rules Library with Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-10">
+        <TabsList className="bg-[#0d131f] border border-[#c8943f]/15 p-1 w-full flex overflow-x-auto gap-1">
+          {CATEGORIES.map(cat => (
+            <TabsTrigger
+              key={cat.id}
+              value={cat.id}
+              data-testid={`tab-${cat.id}`}
+              className="flex-1 text-xs data-[state=active]:bg-[#c8943f]/10 data-[state=active]:text-[#c8943f] text-[#8b95a5] whitespace-nowrap"
             >
-              <div className="flex items-center gap-2 mb-2">
-                <span className="w-3 h-3 rounded-full shrink-0" style={{ background: rule.color }} />
-                <span className="text-sm text-[#fdfbf7] font-medium">{rule.name}</span>
-              </div>
-              <p className="arabic-text text-lg text-[#c8943f] mb-1">{rule.name_arabic}</p>
-              <p className="text-[11px] text-[#8b95a5] line-clamp-2">{rule.description}</p>
-            </div>
+              {cat.label}
+            </TabsTrigger>
           ))}
-        </div>
-      </div>
+        </TabsList>
 
-      {/* Verse Selector */}
-      <div>
-        <h2 className="text-sm text-[#8b95a5] tracking-widest uppercase mb-4">Select a Verse to Practice</h2>
+        <TabsContent value={activeTab} className="mt-6">
+          {/* Qalqalah Quick Reference */}
+          {activeTab === "qalqalah" && (
+            <div className="bg-[#0d131f] border border-[#c8943f]/15 p-5 mb-6">
+              <p className="text-[11px] text-[#8b95a5] tracking-widest uppercase mb-3">Quick Reference — The Qalqalah Letters</p>
+              <div className="flex items-center justify-center gap-4">
+                {["ق", "ط", "ب", "ج", "د"].map(letter => (
+                  <span key={letter} className="w-12 h-12 flex items-center justify-center arabic-text text-2xl text-[#E74C3C] border border-[#E74C3C]/30 bg-[#E74C3C]/5">
+                    {letter}
+                  </span>
+                ))}
+              </div>
+              <p className="text-center text-[11px] text-[#8b95a5] mt-3">Mnemonic: قُطْبُ جَدٍّ (Qutub Jad)</p>
+            </div>
+          )}
 
-        {/* Surah dropdown */}
+          {/* Rules Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {filteredRules.map(rule => (
+              <div
+                key={rule.id}
+                data-testid={`tajweed-rule-${rule.id}`}
+                className="bg-[#0d131f] border border-[#c8943f]/15 p-5 hover:border-[#c8943f]/30 transition-all cursor-pointer group"
+                onClick={() => navigate(`/tajweed/rule/${rule.id}`)}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-3 h-3 rounded-full shrink-0" style={{ background: rule.color }} />
+                    <span className="text-sm text-[#fdfbf7] group-hover:text-[#c8943f] transition-colors font-medium">{rule.name}</span>
+                  </div>
+                  <ChevronRight size={14} className="text-[#8b95a5] group-hover:text-[#c8943f] transition-colors" />
+                </div>
+                <p className="arabic-text text-2xl mb-2" style={{ color: rule.color }} dir="rtl">{rule.name_arabic}</p>
+                <p className="text-[11px] text-[#8b95a5] line-clamp-2 mb-3">{rule.description}</p>
+                <div className="flex items-center gap-2 text-[10px] text-[#8b95a5] border-t border-[#c8943f]/10 pt-3">
+                  <Volume2 size={10} />
+                  <span className="arabic-text text-sm" style={{ color: rule.color }}>{rule.example}</span>
+                  <span>&middot; {rule.example_ref}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Progress */}
+          <div className="bg-[#0d131f] border border-[#c8943f]/15 p-5 mt-6">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm text-[#fdfbf7]">Your Mastery</p>
+              <span className="text-[11px] text-[#c8943f]">{Math.min(3, filteredRules.length)} of {filteredRules.length} Rules Explored</span>
+            </div>
+            <Progress value={Math.min(3, filteredRules.length) / Math.max(filteredRules.length, 1) * 100} className="h-1.5 bg-[#161e2e]" />
+          </div>
+        </TabsContent>
+      </Tabs>
+
+      {/* Practice Section */}
+      <div id="practice-section">
+        <h2 className="text-sm text-[#8b95a5] tracking-widest uppercase mb-4">Practice — Select a Verse</h2>
+
         <select
           data-testid="tajweed-surah-select"
           className="w-full bg-[#0d131f] border border-[#c8943f]/20 text-[#fdfbf7] px-4 py-3 text-sm focus:outline-none focus:border-[#c8943f]/50 mb-4 appearance-none cursor-pointer"
@@ -74,12 +166,9 @@ export default function TajweedHub() {
           ))}
         </select>
 
-        {/* Verse list */}
         {loadingVerses && (
           <div className="space-y-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="skeleton h-12" />
-            ))}
+            {Array.from({ length: 5 }).map((_, i) => <div key={i} className="skeleton h-12" />)}
           </div>
         )}
         {!loadingVerses && verses.length > 0 && (
@@ -92,21 +181,12 @@ export default function TajweedHub() {
                 onClick={() => navigate(`/tajweed/session/${v.verse_key}`)}
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <span className="text-[11px] text-[#c8943f] border border-[#c8943f]/30 px-2 py-0.5 shrink-0">
-                    {v.verse_key}
-                  </span>
-                  <p className="arabic-text text-lg text-[#fdfbf7] truncate" dir="rtl">
-                    {v.text_uthmani}
-                  </p>
+                  <span className="text-[11px] text-[#c8943f] border border-[#c8943f]/30 px-2 py-0.5 shrink-0">{v.verse_key}</span>
+                  <p className="arabic-text text-lg text-[#fdfbf7] truncate" dir="rtl">{v.text_uthmani}</p>
                 </div>
                 <ChevronRight size={16} className="text-[#8b95a5] group-hover:text-[#c8943f] transition-colors shrink-0 ml-2" />
               </div>
             ))}
-            {verses.length > 30 && (
-              <p className="text-center text-[11px] text-[#8b95a5] py-2">
-                Showing first 30 verses. Select to practice.
-              </p>
-            )}
           </div>
         )}
       </div>

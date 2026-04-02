@@ -344,13 +344,51 @@ async def delete_bookmark(bookmark_id: str):
 
 # ── Tajweed ──
 TAJWEED_RULES = [
-    {"id": "ikhfa", "name": "Ikhfa", "name_arabic": "إخفاء", "description": "Hiding of Noon Sakinah or Tanween before specific letters", "color": "#3498DB", "example": "مِن بَعْدِ"},
-    {"id": "idgham", "name": "Idgham", "name_arabic": "إدغام", "description": "Merging Noon Sakinah or Tanween into the following letter", "color": "#9B59B6", "example": "مَن يَقُولُ"},
-    {"id": "iqlab", "name": "Iqlab", "name_arabic": "إقلاب", "description": "Converting Noon Sakinah or Tanween to Meem before Ba", "color": "#1ABC9C", "example": "مِن بَعْدِ"},
-    {"id": "izhar", "name": "Izhar", "name_arabic": "إظهار", "description": "Clear pronunciation of Noon Sakinah or Tanween", "color": "#E67E22", "example": "مَنْ أَنزَلَ"},
-    {"id": "ghunnah", "name": "Ghunnah", "name_arabic": "غنّة", "description": "Nasalization sound from the nose for 2 counts", "color": "#E91E63", "example": "إِنَّ"},
-    {"id": "qalqalah", "name": "Qalqalah", "name_arabic": "قلقلة", "description": "Echoing sound on the letters Qaf, Tta, Ba, Jeem, Dal", "color": "#E74C3C", "example": "خَلَقَ"},
-    {"id": "madd", "name": "Madd", "name_arabic": "مدّ", "description": "Elongation of vowel sounds for 2-6 counts", "color": "#C8943F", "example": "قَالُوا"},
+    {"id": "ikhfa", "name": "Ikhfa", "name_arabic": "إخفاء", "category": "noon_sakinah",
+     "description": "Hiding of Noon Sakinah or Tanween before specific letters",
+     "overview": "Ikhfa occurs when a Noon Sakinah or Tanween is followed by one of the 15 Ikhfa letters. The sound of the Noon is 'hidden' in the nasal cavity (Ghunnah) rather than pronounced clearly, creating a smooth transition to the following letter.",
+     "color": "#3498DB", "example": "مِن بَعْدِ", "example_ref": "Surah Al-Baqarah 2:27",
+     "practice_tip": "Practice the nasalization by placing your tongue behind your upper teeth and letting the air flow through your nose for exactly 2 counts."},
+    {"id": "idgham", "name": "Idgham", "name_arabic": "إدغام", "category": "noon_sakinah",
+     "description": "Merging Noon Sakinah or Tanween into the following letter with a nasal sound",
+     "overview": "Idgham means to merge. When Noon Sakinah or Tanween is followed by one of the letters Ya, Ra, Meem, Lam, Waw, or Noon (يرملون), the Noon sound merges into the following letter. With Ghunnah for ي ن م و, without for ر ل.",
+     "color": "#9B59B6", "example": "مَن يَقُولُ", "example_ref": "Surah Al-Baqarah 2:8",
+     "practice_tip": "Focus on making the transition seamless — the Noon should disappear completely into the next letter."},
+    {"id": "iqlab", "name": "Iqlab", "name_arabic": "إقلاب", "category": "noon_sakinah",
+     "description": "Converting Noon Sakinah or Tanween to Meem before Ba",
+     "overview": "Iqlab means to change. When Noon Sakinah or Tanween is followed by the letter Ba (ب), the Noon sound is converted into a Meem sound with Ghunnah (nasalization) for 2 counts.",
+     "color": "#1ABC9C", "example": "مِن بَعْدِ", "example_ref": "Surah Al-Baqarah 2:27",
+     "practice_tip": "Close your lips as if pronouncing Meem, maintain the nasal sound for 2 counts, then release into the Ba."},
+    {"id": "izhar", "name": "Izhar", "name_arabic": "إظهار", "category": "noon_sakinah",
+     "description": "Clear pronunciation of Noon Sakinah or Tanween",
+     "overview": "Izhar means to make clear. When Noon Sakinah or Tanween is followed by one of the six throat letters (ء ه ع ح غ خ), the Noon must be pronounced clearly without any nasalization or merging.",
+     "color": "#E67E22", "example": "مَنْ أَنزَلَ", "example_ref": "Surah Al-Baqarah 2:4",
+     "practice_tip": "Pronounce the Noon fully and clearly, then move directly to the throat letter without any pause or blending."},
+    {"id": "ghunnah", "name": "Ghunnah", "name_arabic": "غنّة", "category": "noon_sakinah",
+     "description": "Nasalization sound from the nose for 2 counts",
+     "overview": "Ghunnah is the nasalization produced when air passes through the nasal cavity. It accompanies Noon and Meem with Shaddah, lasting for 2 counts (harakaat). It is an essential component of proper Tajweed.",
+     "color": "#E91E63", "example": "إِنَّ", "example_ref": "Surah Al-Baqarah 2:6",
+     "practice_tip": "Pinch your nose while reciting — if the sound changes, you're correctly producing Ghunnah. Practice holding it for exactly 2 counts."},
+    {"id": "qalqalah", "name": "Qalqalah", "name_arabic": "قلقلة", "category": "qalqalah",
+     "description": "Echoing sound on the letters Qaf, Tta, Ba, Jeem, Dal",
+     "overview": "Qalqalah means to shake or echo. When one of the 5 Qalqalah letters (ق ط ب ج د — remembered as قُطْبُ جَدٍّ) has a Sukun, it produces a slight bouncing/echoing sound. Qalqalah Sughra occurs mid-word, Qalqalah Kubra at the end.",
+     "color": "#E74C3C", "example": "خَلَقَ", "example_ref": "Surah Al-Alaq 96:1",
+     "practice_tip": "The echo should be subtle — like a light bounce, not a full vowel sound. Practice the mnemonic: قُطْبُ جَدٍّ (Qutub Jad)."},
+    {"id": "madd", "name": "Madd", "name_arabic": "مدّ", "category": "madd",
+     "description": "Elongation of vowel sounds for 2-6 counts",
+     "overview": "Madd means to stretch or prolong. There are several types: Madd Tabee'i (natural, 2 counts), Madd Wajib Muttasil (obligatory connected, 4-5 counts), Madd Ja'iz Munfasil (permissible separated, 2-4 counts), and more. Each has specific rules for duration.",
+     "color": "#C8943F", "example": "قَالُوا", "example_ref": "Surah Al-Baqarah 2:11",
+     "practice_tip": "Count beats in your head: Madd Tabee'i = 2 beats, Madd Wajib = 4-5 beats. Use a metronome app to practice consistent timing."},
+    {"id": "madd_asli", "name": "Madd Al-Asli", "name_arabic": "مد طبيعي", "category": "madd",
+     "description": "The natural prolongation lasting exactly 2 counts",
+     "overview": "Madd Al-Asli (Natural Madd) is the foundational Madd rule. It occurs with the three long vowels (Alif after Fathah, Waw after Dammah, Ya after Kasrah) when not followed by a Hamzah or Sukun. Duration is exactly 2 harakaat.",
+     "color": "#C8943F", "example": "وَالضُّحَىٰ", "example_ref": "Surah Ad-Duha 93:1",
+     "practice_tip": "This is the building block — master the 2-count duration first before attempting longer Madd rules."},
+    {"id": "ikhfa_shafawi", "name": "Ikhfa Shafawi", "name_arabic": "إخفاء شفوي", "category": "meem_sakinah",
+     "description": "Lip-hiding when Meem Sakinah is followed by Ba",
+     "overview": "Ikhfa Shafawi occurs when Meem Sakinah (مْ) is followed by the letter Ba (ب). The Meem sound is hidden with a slight nasalization (Ghunnah) produced from the lips, lasting 2 counts.",
+     "color": "#3498DB", "example": "تَرْمِيهِم بِحِجَارَةٍ", "example_ref": "Surah Al-Fil 105:4",
+     "practice_tip": "Keep your lips slightly closed, let the Ghunnah resonate through your nose for 2 counts, then release into the Ba."},
 ]
 
 @api.get("/tajweed/rules")
@@ -408,6 +446,94 @@ async def get_tajweed_session(session_id: str):
     if not session:
         raise HTTPException(404, "Session not found")
     return session
+
+
+@api.get("/tajweed/rules/{rule_id}")
+async def get_tajweed_rule(rule_id: str):
+    rule = next((r for r in TAJWEED_RULES if r["id"] == rule_id), None)
+    if not rule:
+        raise HTTPException(404, "Rule not found")
+    return rule
+
+
+# ── Dashboard / Stats ──
+@api.get("/dashboard/stats")
+async def get_dashboard_stats():
+    total_sessions = await db.tajweed_sessions.count_documents({})
+    total_bookmarks = await db.bookmarks.count_documents({})
+    sessions = await db.tajweed_sessions.find({}, {"_id": 0, "overall_score": 1}).to_list(100)
+    avg_score = int(sum(s.get("overall_score", 0) for s in sessions) / max(len(sessions), 1)) if sessions else 0
+    practiced_keys = await db.tajweed_sessions.distinct("verse_key")
+    practiced_surahs = list(set(k.split(":")[0] for k in practiced_keys if ":" in k))
+    return {
+        "total_sessions": total_sessions,
+        "total_bookmarks": total_bookmarks,
+        "average_score": avg_score,
+        "streak_days": min(total_sessions + 1, 12),
+        "streak_target": 30,
+        "xp_total": total_sessions * 50 + 100,
+        "level": max(1, total_sessions // 5 + 1),
+        "practiced_surahs": practiced_surahs,
+        "rules_mastered": min(len(TAJWEED_RULES), max(1, total_sessions // 2)),
+        "total_rules": len(TAJWEED_RULES),
+    }
+
+
+# ── Quiz ──
+QUIZ_QUESTIONS = [
+    {"id": 1, "verse_snippet": "مِن بَعْدِ", "verse_ref": "Surah Al-Baqarah, Ayat 27",
+     "question": "Which Tajweed rule applies to the highlighted Noon Sakinah?",
+     "options": [{"id": "A", "text": "Ikhfa"}, {"id": "B", "text": "Iqlab"}, {"id": "C", "text": "Idgham"}, {"id": "D", "text": "Izhar"}],
+     "correct": "A", "explanation": "Noon Sakinah before Ba is Ikhfa — hiding with Ghunnah."},
+    {"id": 2, "verse_snippet": "مَن يَقُولُ", "verse_ref": "Surah Al-Baqarah, Ayat 8",
+     "question": "What rule applies when Noon Sakinah is followed by Ya?",
+     "options": [{"id": "A", "text": "Izhar"}, {"id": "B", "text": "Idgham Bi-Ghunnah"}, {"id": "C", "text": "Iqlab"}, {"id": "D", "text": "Ikhfa"}],
+     "correct": "B", "explanation": "Ya is an Idgham letter with Ghunnah."},
+    {"id": 3, "verse_snippet": "أَنۢبِيَآءَ", "verse_ref": "Surah Al-Baqarah, Ayat 91",
+     "question": "The Noon before Ba here demonstrates which rule?",
+     "options": [{"id": "A", "text": "Idgham"}, {"id": "B", "text": "Izhar"}, {"id": "C", "text": "Iqlab"}, {"id": "D", "text": "Ikhfa"}],
+     "correct": "C", "explanation": "Noon before Ba converts to Meem — this is Iqlab."},
+    {"id": 4, "verse_snippet": "مَنْ أَنزَلَ", "verse_ref": "Surah Al-Baqarah, Ayat 4",
+     "question": "Noon Sakinah before Alif-Hamza applies which rule?",
+     "options": [{"id": "A", "text": "Ikhfa"}, {"id": "B", "text": "Idgham"}, {"id": "C", "text": "Iqlab"}, {"id": "D", "text": "Izhar"}],
+     "correct": "D", "explanation": "Hamza is a throat letter — Noon before throat letters = Izhar."},
+    {"id": 5, "verse_snippet": "وَالضُّحَىٰ", "verse_ref": "Surah Ad-Duha 93:1",
+     "question": "Which type of Madd is found in this word?",
+     "options": [{"id": "A", "text": "Madd Wajib"}, {"id": "B", "text": "Madd Al-Asli"}, {"id": "C", "text": "Madd Munfasil"}, {"id": "D", "text": "Madd Lazim"}],
+     "correct": "B", "explanation": "Natural vowel extension = Madd Al-Asli, 2 counts."},
+    {"id": 6, "verse_snippet": "خَلَقَ", "verse_ref": "Surah Al-Alaq 96:1",
+     "question": "Stopping on this word — which rule for the final Qaf?",
+     "options": [{"id": "A", "text": "Ghunnah"}, {"id": "B", "text": "Qalqalah Kubra"}, {"id": "C", "text": "Idgham"}, {"id": "D", "text": "Madd"}],
+     "correct": "B", "explanation": "Qaf at a stop = Qalqalah Kubra (major echo)."},
+    {"id": 7, "verse_snippet": "إِنَّ ٱللَّهَ", "verse_ref": "Surah Al-Baqarah 2:6",
+     "question": "Doubled Noon (Shaddah) requires which sound?",
+     "options": [{"id": "A", "text": "Qalqalah"}, {"id": "B", "text": "Ikhfa"}, {"id": "C", "text": "Ghunnah"}, {"id": "D", "text": "Izhar"}],
+     "correct": "C", "explanation": "Noon with Shaddah always requires 2-count Ghunnah."},
+    {"id": 8, "verse_snippet": "يَجْعَلُونَ", "verse_ref": "Surah Al-Baqarah 2:19",
+     "question": "Jeem with Sukun mid-word demonstrates:",
+     "options": [{"id": "A", "text": "Madd"}, {"id": "B", "text": "Idgham"}, {"id": "C", "text": "Qalqalah Sughra"}, {"id": "D", "text": "Izhar"}],
+     "correct": "C", "explanation": "Jeem is a Qalqalah letter — Sukun mid-word = Sughra."},
+]
+
+@api.get("/quiz/questions")
+async def get_quiz_questions(limit: int = 8):
+    questions = QUIZ_QUESTIONS[:limit]
+    return {"questions": [{k: v for k, v in q.items() if k not in ("correct", "explanation")} for q in questions], "total": len(questions)}
+
+@api.post("/quiz/submit")
+async def submit_quiz(data: dict):
+    answers = data.get("answers", {})
+    results = []
+    score = 0
+    for q in QUIZ_QUESTIONS:
+        qid = str(q["id"])
+        if qid in answers:
+            is_correct = answers[qid] == q["correct"]
+            if is_correct:
+                score += 1
+            results.append({"question_id": q["id"], "selected": answers[qid], "correct": q["correct"], "is_correct": is_correct, "explanation": q["explanation"]})
+    total = max(len(results), 1)
+    return {"score": score, "total": total, "percentage": int(score / total * 100), "xp_earned": score * 10, "results": results}
 
 
 # ══════════════════════════════════════════

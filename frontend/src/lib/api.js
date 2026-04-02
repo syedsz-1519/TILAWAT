@@ -21,6 +21,10 @@ const api = {
   createTajweedSession: (verseKey) =>
     http.post("/tajweed/sessions", { verse_key: verseKey }).then(r => r.data),
   getTajweedSession: (id) => http.get(`/tajweed/sessions/${id}`).then(r => r.data),
+  getTajweedRule: (id) => http.get(`/tajweed/rules/${id}`).then(r => r.data),
+  getDashboardStats: () => http.get("/dashboard/stats").then(r => r.data),
+  getQuizQuestions: (limit = 8) => http.get("/quiz/questions", { params: { limit } }).then(r => r.data),
+  submitQuiz: (answers) => http.post("/quiz/submit", { answers }).then(r => r.data),
 };
 
 export default api;

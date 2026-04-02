@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, BookOpen, Mic, Bookmark, Menu, X, ChevronRight } from "lucide-react";
+import { Search, BookOpen, Mic, Bookmark, Menu, X, ChevronRight, LayoutDashboard } from "lucide-react";
 import api from "@/lib/api";
 
 const NAV_ITEMS = [
+  { path: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
   { path: "/search", icon: Search, label: "Search" },
   { path: "/tajweed", icon: Mic, label: "Tajweed" },
   { path: "/bookmarks", icon: Bookmark, label: "Bookmarks" },
