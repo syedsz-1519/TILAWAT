@@ -1,0 +1,112 @@
+{
+  "theme": {
+    "mode": "dark",
+    "archetype": "5 (Jewel & Luxury)",
+    "description": "A premium, distraction-free Islamic EdTech experience focusing on elegant typography, deep moody backgrounds, and high-contrast gold accents for interactive elements."
+  },
+  "colors": {
+    "background": {
+      "main": "#070a0f",
+      "surface": "#0d131f",
+      "surface_hover": "#161e2e",
+      "glass": "rgba(7, 10, 15, 0.8)"
+    },
+    "brand": {
+      "primary": "#c8943f",
+      "primary_hover": "#e6b058",
+      "primary_muted": "rgba(200, 148, 63, 0.1)"
+    },
+    "text": {
+      "primary": "#fdfbf7",
+      "secondary": "#8b95a5",
+      "accent": "#c8943f",
+      "arabic": "#fdfbf7"
+    },
+    "border": {
+      "default": "rgba(200, 148, 63, 0.15)",
+      "focus": "rgba(200, 148, 63, 0.5)"
+    }
+  },
+  "typography": {
+    "fonts": {
+      "arabic": "'Amiri Quran', serif",
+      "ui_heading": "'Outfit', sans-serif",
+      "ui_body": "'Outfit', sans-serif",
+      "translation": "'Cormorant Garamond', serif"
+    },
+    "scales": {
+      "h1": "text-4xl sm:text-5xl tracking-tight font-light",
+      "h2": "text-2xl sm:text-3xl tracking-tight font-light",
+      "h3": "text-xl sm:text-2xl font-light",
+      "body": "text-base leading-relaxed text-[#8b95a5]",
+      "arabic_main": "text-4xl sm:text-5xl leading-[2.5] text-right",
+      "small_label": "text-xs tracking-[0.2em] uppercase text-[#8b95a5]"
+    }
+  },
+  "layout": {
+    "spacing": {
+      "container_padding": "p-8 md:p-12",
+      "section_gap": "gap-12 md:gap-16",
+      "element_gap": "gap-4 md:gap-6"
+    },
+    "structure": {
+      "sidebar": "fixed left-0 top-0 h-screen w-80 border-r border-[#c8943f]/15 bg-[#070a0f] flex flex-col",
+      "main_content": "ml-80 min-h-screen pb-32 bg-[#070a0f] text-[#fdfbf7]",
+      "audio_player_bar": "fixed bottom-0 left-80 right-0 h-24 bg-[#070a0f]/80 backdrop-blur-xl border-t border-[#c8943f]/15 z-50 flex items-center px-8",
+      "container_width": "max-w-4xl mx-auto"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-[#c8943f] text-[#070a0f] hover:bg-[#e6b058] font-medium transition-all duration-300 rounded-none px-6 py-2",
+      "secondary": "border border-[#c8943f]/30 text-[#c8943f] hover:bg-[#c8943f]/10 transition-all duration-300 rounded-none px-6 py-2",
+      "ghost": "text-[#8b95a5] hover:text-[#c8943f] hover:bg-[#c8943f]/5 transition-all duration-300 rounded-none px-4 py-2"
+    },
+    "cards": {
+      "default": "bg-[#0d131f] border border-[#c8943f]/15 p-6 md:p-8 hover:border-[#c8943f]/30 transition-all duration-300",
+      "glass": "bg-[#070a0f]/60 backdrop-blur-xl border border-[#c8943f]/20 p-6 md:p-8"
+    },
+    "surah_list_item": {
+      "default": "flex items-center justify-between p-4 cursor-pointer text-[#8b95a5] hover:text-[#c8943f] hover:bg-[#c8943f]/5 border-b border-[#c8943f]/10 transition-colors",
+      "active": "flex items-center justify-between p-4 cursor-pointer text-[#c8943f] bg-[#c8943f]/10 border-l-2 border-[#c8943f]"
+    },
+    "verse_container": {
+      "wrapper": "py-10 border-b border-[#c8943f]/10 flex flex-col gap-6",
+      "arabic_text": "text-right font-['Amiri_Quran'] text-4xl sm:text-5xl leading-[2.5] text-[#fdfbf7]",
+      "active_word": "text-[#c8943f] transition-colors duration-200",
+      "translation_text": "text-left font-['Cormorant_Garamond'] text-xl sm:text-2xl text-[#8b95a5] leading-relaxed"
+    },
+    "tajweed_recorder": {
+      "wrapper": "flex flex-col items-center justify-center min-h-[60vh] gap-8",
+      "mic_button": "w-32 h-32 rounded-full bg-[#c8943f]/10 border border-[#c8943f]/30 flex items-center justify-center text-[#c8943f] hover:bg-[#c8943f]/20 hover:scale-105 transition-all duration-300 relative",
+      "mic_pulse": "absolute inset-0 rounded-full border border-[#c8943f] animate-ping opacity-20",
+      "status_text": "text-[#c8943f] font-['Outfit'] tracking-widest uppercase text-sm"
+    },
+    "search_input": {
+      "wrapper": "relative w-full",
+      "input": "w-full bg-[#0d131f] border border-[#c8943f]/20 text-[#fdfbf7] placeholder-[#8b95a5] px-4 py-3 focus:outline-none focus:border-[#c8943f]/50 transition-colors",
+      "icon": "absolute right-4 top-1/2 -translate-y-1/2 text-[#8b95a5]"
+    }
+  },
+  "motion": {
+    "hover": "transition-all duration-300 ease-out",
+    "page_enter": "animate-in fade-in slide-in-from-bottom-4 duration-700",
+    "list_stagger": "animate-in fade-in slide-in-from-right-4 duration-500 stagger-100"
+  },
+  "assets": {
+    "icons": "lucide-react",
+    "image_urls": {}
+  },
+  "instructions_to_main_agent": [
+    "Apply Archetype 5 (Jewel & Luxury) with a strict dark theme.",
+    "Use ONLY #070a0f for the main background and #c8943f for the gold accent. Do not introduce standard Tailwind grays like slate or zinc.",
+    "Import Google Fonts 'Amiri Quran', 'Outfit', and 'Cormorant Garamond' in your main HTML or CSS.",
+    "The layout must feature a fixed left sidebar (w-80) for Surah navigation and a main content area with max-w-4xl for the reading view.",
+    "Implement the audio player as a sticky bottom bar with glassmorphism (bg-[#070a0f]/80 backdrop-blur-xl).",
+    "For the Mushaf Reader, words currently being played in the audio MUST be highlighted using the gold accent color (#c8943f).",
+    "The Tajweed Practice UI should be a pure CSS/Lucide mockup: a large central microphone button with a CSS 'animate-ping' border to simulate recording.",
+    "Every interactive element (button, list item, audio control, input) MUST have a descriptive 'data-testid' attribute.",
+    "Do not use card components with soft shadows. Use sharp, flat rectangles with subtle gold borders (border-[#c8943f]/15).",
+    "All components must be accessible; ensure high contrast for all readable text."
+  ]
+}
