@@ -41,29 +41,61 @@ export default function Dashboard() {
 
   return (
     <div data-testid="dashboard-page" className="max-w-5xl mx-auto px-4 sm:px-8 py-12 pb-32">
-      {/* Header */}
-      <div className="mb-10 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-        <div>
-          <p className="text-[11px] tracking-[0.2em] text-[#E6C364] uppercase mb-2">Hifdh Journey</p>
-          <h1 className="text-3xl sm:text-4xl font-light text-[#E5E2E1] mb-1">Mastery & Momentum</h1>
-          <p className="translation-text text-base text-[#9a9a9a] italic">
-            "Verily, He who has ordained the Quran for thee, will bring thee back to the Place of Return."
-          </p>
+      {/* Header & Inspiration */}
+      <div className="mb-10">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-8">
+          <div>
+            <p className="text-[11px] tracking-[0.2em] text-[#E6C364] uppercase mb-2">Daily Discovery</p>
+            <h1 className="text-3xl sm:text-4xl font-light text-[#E5E2E1]">Mastery & Momentum</h1>
+          </div>
+          <div className="flex items-center gap-2 self-start bg-[#1a1a22] border border-[#E6C364]/15 px-4 py-2 rounded-lg">
+            <span className="text-sm text-[#9a9a9a]">Global Translation:</span>
+            <select 
+              value={prefLang} 
+              onChange={e => {
+                setPrefLang(e.target.value);
+                localStorage.setItem("tilawa_pref_lang", e.target.value);
+              }} 
+              className="bg-transparent text-[#E6C364] outline-none cursor-pointer"
+            >
+              {Object.entries(languages).map(([name, id]) => (
+                <option key={id} value={id}>{name.charAt(0).toUpperCase() + name.slice(1)}</option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div className="flex items-center gap-2 self-start bg-[#1a1a22] border border-[#E6C364]/15 px-4 py-2 rounded-lg">
-          <span className="text-sm text-[#9a9a9a]">Global Translation:</span>
-          <select 
-            value={prefLang} 
-            onChange={e => {
-              setPrefLang(e.target.value);
-              localStorage.setItem("tilawa_pref_lang", e.target.value);
-            }} 
-            className="bg-transparent text-[#E6C364] outline-none cursor-pointer"
-          >
-            {Object.entries(languages).map(([name, id]) => (
-               <option key={id} value={id}>{name.charAt(0).toUpperCase() + name.slice(1)}</option>
-            ))}
-          </select>
+
+        {/* Daily Inspiration Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Ayat of the Day */}
+          <div className="bg-gradient-to-br from-[#1a1a22] to-[#121218] border border-[#E6C364]/20 p-6 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#E6C364]/5 rounded-bl-full shadow-[inset_0_0_50px_rgba(230,195,100,0.1)] -z-10 transition-transform group-hover:scale-110" />
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[10px] tracking-widest text-[#E6C364] uppercase border border-[#E6C364]/20 px-2 py-1 rounded-sm">Ayat of the Day</span>
+              <span className="text-xs text-[#9a9a9a]">Al-Baqarah [2:183]</span>
+            </div>
+            <p className="arabic-text text-2xl text-[#E5E2E1] leading-loose mb-4 text-right" dir="rtl">
+              يَا أَيُّهَا الَّذِينَ آمَنُوا كُتِبَ عَلَيْكُمُ الصِّيَامُ كَمَا كُتِبَ عَلَى الَّذِينَ مِن قَبْلِكُمْ لَعَلَّكُمْ تَتَّقُونَ
+            </p>
+            <p className="translation-text text-sm text-[#9a9a9a] leading-relaxed">
+              "O believers! Fasting is prescribed for you—as it was for those before you—so perhaps you will become mindful of Allah."
+            </p>
+          </div>
+
+          {/* Hadith of the Day */}
+          <div className="bg-gradient-to-br from-[#1a1a22] to-[#121218] border border-[#9B59B6]/20 p-6 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#9B59B6]/5 rounded-bl-full shadow-[inset_0_0_50px_rgba(155,89,182,0.1)] -z-10 transition-transform group-hover:scale-110" />
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-[10px] tracking-widest text-[#9B59B6] uppercase border border-[#9B59B6]/20 px-2 py-1 rounded-sm">Hadith of the Day</span>
+              <span className="text-xs text-[#9a9a9a]">Mishkat ul Masabih #1957</span>
+            </div>
+            <p className="arabic-text text-xl text-[#E5E2E1] leading-loose mb-4 text-right" dir="rtl">
+              رسول اللہ ﷺ نے فرمایا :’’ جنت کے آٹھ دروازے ہیں ، ان میں سے ایک دروازے کا نام ’’ الریان ‘‘ ہے ، اس میں سے صرف روزہ دار ہی داخل ہوں گے ۔‘‘
+            </p>
+            <p className="translation-text text-sm text-[#9a9a9a] leading-relaxed">
+              The Messenger of Allah (ﷺ) said: "There are eight gates of Paradise. One of them is called Ar-Rayyan, and only those who observe fasting will enter through it."
+            </p>
+          </div>
         </div>
       </div>
 
