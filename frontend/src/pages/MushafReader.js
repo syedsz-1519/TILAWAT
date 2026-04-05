@@ -14,7 +14,7 @@ export default function MushafReader() {
   const [selectedLang, setSelectedLang] = useState(localStorage.getItem("tilawa_pref_lang") || 122);
   const [languages, setLanguages] = useState({});
 
-  useEffect(() => { api.getTranslations().then(setLanguages).catch(() => {}); }, []);
+  useEffect(() => { api.getTranslations().then(setLanguages).catch(() => { }); }, []);
 
   useEffect(() => {
     if (!surahId) return;
