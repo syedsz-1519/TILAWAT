@@ -118,31 +118,39 @@ async def get_cached_verses(surah_id: int, translations: str = "20"):
     all_verses = []
     page = 1
     try:
-        while True:
-            data = await fetch_from_quran_api(
-                f"/verses/by_chapter/{surah_id}",
-                {
-                    "language": "en",
-                    "words": "true",
-                    "translations": translations,
-                    "fields": "text_uthmani,text_imlaei",
-                    "word_fields": "text_uthmani,text_transliteration,audio_url",
-                    "per_page": 50,
-                    "page": page,
-                }
-            )
+        # Fetch page 1 to get pagination info
+        base_params = {
+            "language": "en",
+            "words": "true",
+            "translations": translations,
+            "fields": "text_uthmani,text_imlaei",
+            "word_fields": "text_uthmani,text_transliteration,audio_url",
+            "per_page": 50,
+        }
+        first_page = await fetch_from_quran_api(f"/verses/by_chapter/{surah_id}", {**base_params, "page": 1})
+        pages_to_fetch = []
+        pagination = first_page.get("pagination", {})
+        total_pages = pagination.get("total_pages", 1)
+        
+        all_pages_data = [first_page]
+        
+        if total_pages > 1:
+            tasks = []
+            for p in range(2, total_pages + 1):
+                tasks.append(fetch_from_quran_api(f"/verses/by_chapter/{surah_id}", {**base_params, "page": p}))
+            # Fetch remaining pages concurrently
+            other_pages = await asyncio.gather(*tasks, return_exceptions=True)
+            for res in other_pages:
+                if not isinstance(res, Exception):
+                    all_pages_data.append(res)
+                
+        for data in all_pages_data:
             verses_raw = data.get("verses", [])
-            pagination = data.get("pagination", {})
-
             for v in verses_raw:
                 words = []
                 for w in v.get("words", []):
                     tr = w.get("translation")
-                    tr_text = ""
-                    if isinstance(tr, dict):
-                        tr_text = tr.get("text", "")
-                    elif isinstance(tr, str):
-                        tr_text = tr
+                    tr_text = tr.get("text", "") if isinstance(tr, dict) else (tr if isinstance(tr, str) else "")
                     words.append({
                         "position": w.get("position", 0),
                         "text_uthmani": w.get("text_uthmani", ""),
@@ -174,11 +182,6 @@ async def get_cached_verses(surah_id: int, translations: str = "20"):
                     "words": words,
                     "translations": translated_texts,
                 })
-
-            if not pagination.get("next_page"):
-                break
-            page = pagination["next_page"]
-            await asyncio.sleep(0.3)
 
     except Exception as e:
         logger.error(f"Failed to fetch verses for surah {surah_id}: {e}")
@@ -580,8 +583,7 @@ class TTSRequest(BaseModel):
 async def generate_tts(data: TTSRequest):
     api_key = os.environ.get("ELEVENLABS_API_KEY")
     if not api_key:
-        api_key = "a_dummy_key_if_they_dont_exist"
-    # Using Rachel's voice ID
+        raise HTTPException(status_code=400, detail="Missing ELEVENLABS_API_KEY in backend/.env file")
     voice_id = "21m00Tcm4TlvDq8ikWAM" 
     url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}?output_format=mp3_44100_128"
     headers = {
@@ -600,8 +602,7 @@ async def generate_tts(data: TTSRequest):
             from fastapi.responses import Response
             return Response(content=response.content, media_type="audio/mpeg")
         except Exception as e:
-            # Fallback mock MP3 or error message for missing API key/quota
-            raise HTTPException(status_code=500, detail=str(e))
+            raise HTTPException(status_code=500, detail="ElevenLabs API Error: " + str(e))
 
 @api.get("/translations")
 async def get_supported_translations():
