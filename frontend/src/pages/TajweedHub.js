@@ -11,6 +11,7 @@ const CATEGORIES = [
   { id: "meem_sakinah", label: "Meem Sakinah" },
   { id: "madd", label: "Madd Rules" },
   { id: "qalqalah", label: "Qalqalah" },
+  { id: "waqf_rules", label: "Waqf (Stopping) Rules" },
 ];
 
 export default function TajweedHub() {
@@ -146,6 +147,58 @@ export default function TajweedHub() {
               <span className="text-[11px] text-[#E6C364]">{Math.min(3, filteredRules.length)} of {filteredRules.length} Rules Explored</span>
             </div>
             <Progress value={Math.min(3, filteredRules.length) / Math.max(filteredRules.length, 1) * 100} className="h-1.5 bg-[#2a2a36]" />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="waqf_rules" className="mt-6 animation-fadeIn">
+          <div className="mb-8">
+            <h2 className="text-lg text-[#E6C364] mb-4 border-b border-[#E6C364]/15 pb-2">Core Waqf (Stopping) Signs</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { sym: "مـ", name: "Waqf Lazim", meaning: "Mandatory Stop", action: "You must stop. Continuing can change the meaning." },
+                { sym: "لا", name: "La", meaning: "No Stop", action: "Do not stop. If you must stop for breath, repeat the previous word when restarting." },
+                { sym: "ج", name: "Ja'iz", meaning: "Permissible Stop", action: "You can either stop or continue; both are fine." },
+                { sym: "صلى", name: "Al-Wasl Awla", meaning: "Better to Continue", action: "You may stop, but it is better to keep going." },
+                { sym: "قلى", name: "Al-Waqf Awla", meaning: "Better to Stop", action: "You may continue, but stopping is preferred." },
+                { sym: "س", name: "Saktah", meaning: "Short Silence", action: "A very brief pause (1–2 seconds) without taking a fresh breath." },
+                { sym: "∴ ∴", name: "Mu'anaqah", meaning: "Embracing Stop", action: "You see two sets of dots. You can stop at one of them, but not both." },
+              ].map((w, i) => (
+                <div key={i} className="bg-[#1a1a22] border border-[#E6C364]/15 p-4 flex gap-4 hover:border-[#E6C364]/30 transition-colors">
+                  <div className="w-14 h-14 shrink-0 flex items-center justify-center bg-[#151515] border border-[#E6C364]/20 rounded-full">
+                    <span className="arabic-text text-2xl text-[#E6C364] pt-2">{w.sym}</span>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[#E5E2E1] font-medium">{w.name}</span>
+                      <span className="text-[10px] uppercase tracking-wider text-[#9B59B6] border border-[#9B59B6]/30 px-1.5 py-0.5 rounded-full">{w.meaning}</span>
+                    </div>
+                    <p className="text-xs text-[#8a8a8a] leading-relaxed">{w.action}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h2 className="text-lg text-[#E6C364] mb-4 border-b border-[#E6C364]/15 pb-2">Rare & Other Symbols</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[
+                { sym: "قف", name: "Qif", rule: "\"Stop\" — This is an old mark rarely used now, but it means a stop is preferred even if the sentence continues." },
+                { sym: "صل", name: "Sila", rule: "\"Connect\" — The opposite of Qif; it is much better to continue." },
+                { sym: "ق", name: "Qaf", rule: "\"Qila 'Alayhil Waqf\" — Some scholars say stop here, others say don't. Usually, you continue." },
+                { sym: "۩", name: "Sajdah", rule: "This symbol (resembling a mihrab/arch) indicates you must perform a prostration after reciting this verse." }
+              ].map((w, i) => (
+                <div key={i} className="bg-[#1a1a22] border border-[#E6C364]/15 p-4 flex gap-4">
+                  <div className="w-12 h-12 shrink-0 flex items-center justify-center bg-[#151515] border border-[#E6C364]/10 rounded-full">
+                    <span className="arabic-text text-2xl text-[#E5E2E1] pt-1">{w.sym}</span>
+                  </div>
+                  <div>
+                    <span className="text-[#E5E2E1] font-medium text-sm block mb-1">{w.name}</span>
+                    <p className="text-xs text-[#8a8a8a] leading-relaxed">{w.rule}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </TabsContent>
       </Tabs>
