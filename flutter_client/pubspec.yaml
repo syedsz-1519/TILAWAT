@@ -1,0 +1,36 @@
+name: tilawa_client
+description: TILAWA Mobile Application (Research-Grade Islamic EdTech)
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # State Management
+  flutter_riverpod: ^2.4.3
+  
+  # API & DB Cache
+  dio: ^5.3.3
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  
+  # Audio Playback
+  just_audio: ^0.9.35
+  
+  # Audio Recording for Tajweed
+  record: ^5.0.5
+  
+  # UI & Animations
+  cupertino_icons: ^1.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
