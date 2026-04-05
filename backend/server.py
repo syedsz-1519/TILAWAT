@@ -16,9 +16,43 @@ import httpx
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-mongo_url = os.environ['MONGO_URL']
-mongo_client = AsyncIOMotorClient(mongo_url)
-db = mongo_client[os.environ['DB_NAME']]
+class MockCursor:
+    def __init__(self, list_items):
+        self.list_items = list_items
+    def sort(self, *args, **kwargs): return self
+    def limit(self, *args, **kwargs): return self
+    async def to_list(self, length): return self.list_items[:length]
+
+class MockCollection:
+    def __init__(self): self.data = []
+    def find(self, q=None, p=None):
+        if not q or "$or" in q: return MockCursor(self.data)
+        res = [i for i in self.data if all(i.get(k) == v for k, v in q.items() if k != "$or")]
+        return MockCursor(res)
+    async def find_one(self, q, p=None):
+        c = self.find(q)
+        return c.list_items[0] if c.list_items else None
+    async def insert_many(self, items): self.data.extend(items)
+    async def insert_one(self, item): self.data.append(item)
+    async def delete_many(self, q): self.data = [] if not q else self.data
+    async def delete_one(self, q):
+        initial = len(self.data)
+        self.data = [i for i in self.data if not all(i.get(k) == v for k, v in q.items())]
+        class Res: deleted_count = initial - len(self.data)
+        return Res()
+    async def count_documents(self, q): return len(self.find(q).list_items)
+    async def distinct(self, key): return list(set(i.get(key) for i in self.data if key in i))
+    async def create_index(self, *args, **kwargs): pass
+
+class MockDB:
+    def __init__(self):
+        self.surahs = MockCollection()
+        self.verses = MockCollection()
+        self.audio_timings = MockCollection()
+        self.bookmarks = MockCollection()
+        self.tajweed_sessions = MockCollection()
+
+db = MockDB()
 
 QURAN_API = "https://api.quran.com/api/v4"
 QDC_API = "https://api.qurancdn.com/api/qdc"
@@ -74,9 +108,9 @@ async def get_cached_surahs():
 
 
 # ── Cache: Verses ──
-async def get_cached_verses(surah_id: int):
+async def get_cached_verses(surah_id: int, translations: str = "20"):
     cached = await db.verses.find(
-        {"surah_id": surah_id}, {"_id": 0}
+        {"surah_id": surah_id, "translations_query": translations}, {"_id": 0}
     ).sort("verse_number", 1).to_list(300)
     if cached:
         return cached
@@ -90,7 +124,7 @@ async def get_cached_verses(surah_id: int):
                 {
                     "language": "en",
                     "words": "true",
-                    "translations": "20",
+                    "translations": translations,
                     "fields": "text_uthmani,text_imlaei",
                     "word_fields": "text_uthmani,text_transliteration,audio_url",
                     "per_page": 50,
@@ -118,16 +152,18 @@ async def get_cached_verses(surah_id: int):
                         "audio_url": w.get("audio_url", ""),
                     })
 
-                translations = v.get("translations", [])
-                translation_en = ""
-                if translations:
-                    raw = translations[0].get("text", "")
-                    # Strip HTML tags from translation
-                    import re
-                    translation_en = re.sub(r'<[^>]+>', '', raw)
+                translations_arr = v.get("translations", [])
+                translated_texts = []
+                import re
+                for tr in translations_arr:
+                    translated_texts.append({
+                        "id": tr.get("resource_id"),
+                        "text": re.sub(r'<[^>]+>', '', tr.get("text", ""))
+                    })
 
                 all_verses.append({
                     "surah_id": surah_id,
+                    "translations_query": translations,
                     "verse_number": v.get("verse_number", 0),
                     "verse_key": v.get("verse_key", ""),
                     "text_uthmani": v.get("text_uthmani", ""),
@@ -136,7 +172,7 @@ async def get_cached_verses(surah_id: int):
                     "page_number": v.get("page_number"),
                     "hizb_number": v.get("hizb_number"),
                     "words": words,
-                    "translation_en": translation_en,
+                    "translations": translated_texts,
                 })
 
             if not pagination.get("next_page"):
@@ -149,10 +185,10 @@ async def get_cached_verses(surah_id: int):
         return []
 
     if all_verses:
-        await db.verses.delete_many({"surah_id": surah_id})
+        await db.verses.delete_many({"surah_id": surah_id, "translations_query": translations})
         await db.verses.insert_many(all_verses)
         return await db.verses.find(
-            {"surah_id": surah_id}, {"_id": 0}
+            {"surah_id": surah_id, "translations_query": translations}, {"_id": 0}
         ).sort("verse_number", 1).to_list(300)
     return []
 
@@ -219,8 +255,8 @@ async def get_surah(surah_id: int):
 
 # ── Verses ──
 @api.get("/surahs/{surah_id}/verses")
-async def get_verses(surah_id: int):
-    verses = await get_cached_verses(surah_id)
+async def get_verses(surah_id: int, translations: str = "20"):
+    verses = await get_cached_verses(surah_id, translations)
     return {"verses": verses, "total": len(verses)}
 
 
@@ -536,6 +572,56 @@ async def submit_quiz(data: dict):
     return {"score": score, "total": total, "percentage": int(score / total * 100), "xp_earned": score * 10, "results": results}
 
 
+# ── ElevenLabs TTS ──
+class TTSRequest(BaseModel):
+    text: str
+
+@api.post("/tts")
+async def generate_tts(data: TTSRequest):
+    api_key = os.environ.get("ELEVENLABS_API_KEY")
+    if not api_key:
+        api_key = "a_dummy_key_if_they_dont_exist"
+    # Using Rachel's voice ID
+    voice_id = "21m00Tcm4TlvDq8ikWAM" 
+    url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}?output_format=mp3_44100_128"
+    headers = {
+        "Accept": "audio/mpeg",
+        "Content-Type": "application/json",
+        "xi-api-key": api_key
+    }
+    payload = {
+        "text": data.text,
+        "model_id": "eleven_multilingual_v2"
+    }
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        try:
+            response = await client.post(url, json=payload, headers=headers)
+            response.raise_for_status()
+            from fastapi.responses import Response
+            return Response(content=response.content, media_type="audio/mpeg")
+        except Exception as e:
+            # Fallback mock MP3 or error message for missing API key/quota
+            raise HTTPException(status_code=500, detail=str(e))
+
+@api.get("/translations")
+async def get_supported_translations():
+    # Mapping of supported Indian translations + English
+    return {
+        "hindi": 122,
+        "urdu": 97,
+        "telugu": 74,
+        "marathi": 41,
+        "tamil": 133,
+        "gujarati": 40,
+        "malayalam": 121,
+        "kannada": 771,
+        "assamese": 120,
+        "odia": 126,
+        "bengali": 161,
+        "kashmiri": 740,
+        "english": 20
+    }
+
 # ══════════════════════════════════════════
 #  APP SETUP
 # ══════════════════════════════════════════
@@ -563,4 +649,8 @@ async def startup():
 
 @app.on_event("shutdown")
 async def shutdown():
-    mongo_client.close()
+    pass
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -11,11 +11,16 @@ export default function MushafReader() {
   const [loading, setLoading] = useState(true);
   const { loadSurah, currentVerseKey, currentWordPosition } = useAudio();
   const verseRefs = useRef({});
+  const [selectedLang, setSelectedLang] = useState(122); // default hindi
+  const [languages, setLanguages] = useState({});
+
+  useEffect(() => { api.getTranslations().then(setLanguages).catch(() => {}); }, []);
 
   useEffect(() => {
     if (!surahId) return;
     setLoading(true);
-    Promise.all([api.getSurah(parseInt(surahId)), api.getVerses(parseInt(surahId))])
+    // Request English (20) and selected language
+    Promise.all([api.getSurah(parseInt(surahId)), api.getVerses(parseInt(surahId), `20,${selectedLang}`)])
       .then(([surahData, versesData]) => {
         setSurah(surahData);
         setVerses(versesData.verses || []);
@@ -27,7 +32,7 @@ export default function MushafReader() {
           time: new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
         }));
       }).catch(() => setLoading(false));
-  }, [surahId]);
+  }, [surahId, selectedLang]);
 
   useEffect(() => { if (surahId) loadSurah(parseInt(surahId)); }, [surahId, loadSurah]);
 
@@ -74,9 +79,16 @@ export default function MushafReader() {
 
       {/* Bismillah */}
       {surah && surah.bismillah_pre && (
-        <div className="text-center py-8 mb-4 border-b border-[#E6C364]/10 animate-fadeIn">
+        <div className="text-center py-8 mb-4 border-b border-[#E6C364]/10 animate-fadeIn relative">
           <p className="arabic-text text-3xl sm:text-4xl text-[#E5E2E1]">بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</p>
-          <p className="translation-text text-base text-[#9a9a9a] mt-3">In the name of Allah, the Entirely Merciful, the Especially Merciful</p>
+          <div className="absolute right-0 bottom-4 text-sm text-[#9a9a9a]">
+            Translate to: 
+            <select value={selectedLang} onChange={e => setSelectedLang(e.target.value)} className="ml-2 bg-[#1A1A1A] text-[#E6C364] border border-[#E6C364]/20 p-1 rounded outline-none">
+              {Object.entries(languages).map(([name, id]) => (
+                 <option key={id} value={id}>{name.charAt(0).toUpperCase() + name.slice(1)}</option>
+              ))}
+            </select>
+          </div>
         </div>
       )}
 

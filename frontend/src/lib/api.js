@@ -8,9 +8,11 @@ const http = axios.create({ baseURL: API, timeout: 30000 });
 const api = {
   getSurahs: () => http.get("/surahs").then(r => r.data),
   getSurah: (id) => http.get(`/surahs/${id}`).then(r => r.data),
-  getVerses: (surahId) => http.get(`/surahs/${surahId}/verses`).then(r => r.data),
+  getVerses: (surahId, translation_ids = "20") => http.get(`/surahs/${surahId}/verses`, { params: { translations: translation_ids } }).then(r => r.data),
+  getTranslations: () => http.get("/translations").then(r => r.data),
+  generateTts: (text) => http.post("/tts", { text }, { responseType: 'blob' }).then(r => r.data),
   getVerse: (key) => http.get(`/verses/${key}`).then(r => r.data),
-  getAudioTimings: (surahId, reciterId = 7) =>
+  getAudioTimings: (surahId, reciterId = 11) =>
     http.get(`/audio-timings/${surahId}`, { params: { reciter_id: reciterId } }).then(r => r.data),
   getReciters: () => http.get("/reciters").then(r => r.data),
   search: (q, limit = 20) => http.get("/search", { params: { q, limit } }).then(r => r.data),

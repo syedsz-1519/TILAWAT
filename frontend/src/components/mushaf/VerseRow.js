@@ -37,10 +37,20 @@ export default function VerseRow({ verse, isActive, activeWordPosition, onBookma
         ))}
       </div>
 
-      {/* Translation */}
-      {verse.translation_en && (
-        <p className="translation-text text-lg sm:text-xl text-[#9a9a9a] mt-5 leading-relaxed">{verse.translation_en}</p>
-      )}
+      {/* Translations */}
+      {verse.translations?.map(tr => (
+        <div key={tr.id} className="mt-5 flex gap-3 group">
+          <button onClick={() => {
+            import('@/lib/api').then(m => m.default.generateTts(tr.text).then(blob => {
+              const audio = new Audio(URL.createObjectURL(blob));
+              audio.play();
+            }).catch(e => alert("Audio generation failed: " + e.message)));
+          }} className="mt-1 flex-shrink-0 text-[#9a9a9a] hover:text-[#E6C364] opacity-50 group-hover:opacity-100 transition-all rounded-full p-1" title="Play Voice (ElevenLabs)">
+            <Play size={14} />
+          </button>
+          <p className="translation-text text-lg sm:text-xl text-[#9a9a9a] leading-relaxed flex-1">{tr.text}</p>
+        </div>
+      ))}
     </div>
   );
 }

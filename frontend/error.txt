@@ -1,0 +1,151 @@
+﻿
+> frontend@0.1.0 build
+> craco build
+
+node.exe : node:internal/mo
+dules/cjs/loader:1475
+At line:1 char:1
++ & "C:\Program 
+Files\nodejs/node.exe" 
+"C:\Program 
+Files\nodejs/node_mo ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
+    + CategoryInfo         
+     : NotSpecified: (nod  
+  e:internal/modules/cjs   
+ /loader:1475:String) [    
+], RemoteException
+    + FullyQualifiedErrorI 
+   d : NativeCommandError
+ 
+  const err = new 
+Error(message);
+              ^
+
+Error: Cannot find module 
+'ajv/dist/compile/codegen'
+Require stack:
+- C:\Users\ASUS\Desktop\TIL
+AWAT NEW\frontend\node_modu
+les\ajv-keywords\dist\defin
+itions\typeof.js
+- C:\Users\ASUS\Desktop\TIL
+AWAT NEW\frontend\node_modu
+les\ajv-keywords\dist\keywo
+rds\typeof.js
+- C:\Users\ASUS\Desktop\TIL
+AWAT NEW\frontend\node_modu
+les\ajv-keywords\dist\keywo
+rds\index.js
+- C:\Users\ASUS\Desktop\TIL
+AWAT NEW\frontend\node_modu
+les\ajv-keywords\dist\index
+.js
+- C:\Users\ASUS\Desktop\TIL
+AWAT NEW\frontend\node_modu
+les\schema-utils\dist\valid
+ate.js
+- C:\Users\ASUS\Desktop\TIL
+AWAT NEW\frontend\node_modu
+les\schema-utils\dist\index
+.js
+- C:\Users\ASUS\Desktop\TIL
+AWAT NEW\frontend\node_modu
+les\terser-webpack-plugin\d
+ist\index.js
+- C:\Users\ASUS\Desktop\TIL
+AWAT NEW\frontend\node_modu
+les\react-scripts\config\we
+bpack.config.js
+- C:\Users\ASUS\Desktop\TIL
+AWAT NEW\frontend\node_modu
+les\@craco\craco\dist\lib\c
+ra.js
+- C:\Users\ASUS\Desktop\TIL
+AWAT NEW\frontend\node_modu
+les\@craco\craco\dist\scrip
+ts\build.js
+    at 
+Module._resolveFilename (no
+de:internal/modules/cjs/loa
+der:1475:15)
+    at wrapResolveFilename 
+(node:internal/modules/cjs/
+loader:1048:27)
+    at defaultResolveImplFo
+rCJSLoading (node:internal/
+modules/cjs/loader:1072:10)
+    at 
+resolveForCJSWithHooks (nod
+e:internal/modules/cjs/load
+er:1093:12)
+    at Module._load (node:i
+nternal/modules/cjs/loader:
+1261:25)
+    at wrapModuleLoad (node
+:internal/modules/cjs/loade
+r:255:19)
+    at Module.require (node
+:internal/modules/cjs/loade
+r:1575:12)
+    at require (node:intern
+al/modules/helpers:191:16)
+    at Object.<anonymous> (
+C:\Users\ASUS\Desktop\TILAW
+AT NEW\frontend\node_module
+s\ajv-keywords\dist\definit
+ions\typeof.js:3:19)
+    at Module._compile (nod
+e:internal/modules/cjs/load
+er:1831:14) {
+  code: 'MODULE_NOT_FOUND',
+  requireStack: [
+    'C:\\Users\\ASUS\\Deskt
+op\\TILAWAT NEW\\frontend\\
+node_modules\\ajv-keywords\
+\dist\\definitions\\typeof.
+js',
+    'C:\\Users\\ASUS\\Deskt
+op\\TILAWAT NEW\\frontend\\
+node_modules\\ajv-keywords\
+\dist\\keywords\\typeof.js'
+,
+    'C:\\Users\\ASUS\\Deskt
+op\\TILAWAT NEW\\frontend\\
+node_modules\\ajv-keywords\
+\dist\\keywords\\index.js',
+    'C:\\Users\\ASUS\\Deskt
+op\\TILAWAT NEW\\frontend\\
+node_modules\\ajv-keywords\
+\dist\\index.js',
+    'C:\\Users\\ASUS\\Deskt
+op\\TILAWAT NEW\\frontend\\
+node_modules\\schema-utils\
+\dist\\validate.js',
+    'C:\\Users\\ASUS\\Deskt
+op\\TILAWAT NEW\\frontend\\
+node_modules\\schema-utils\
+\dist\\index.js',
+    'C:\\Users\\ASUS\\Deskt
+op\\TILAWAT NEW\\frontend\\
+node_modules\\terser-webpac
+k-plugin\\dist\\index.js',
+    'C:\\Users\\ASUS\\Deskt
+op\\TILAWAT NEW\\frontend\\
+node_modules\\react-scripts
+\\config\\webpack.config.js
+',
+    'C:\\Users\\ASUS\\Deskt
+op\\TILAWAT NEW\\frontend\\
+node_modules\\@craco\\craco
+\\dist\\lib\\cra.js',
+    'C:\\Users\\ASUS\\Deskt
+op\\TILAWAT NEW\\frontend\\
+node_modules\\@craco\\craco
+\\dist\\scripts\\build.js'
+  ]
+}
+
+Node.js v25.8.0
