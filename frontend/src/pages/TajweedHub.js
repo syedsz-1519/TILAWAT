@@ -6,12 +6,18 @@ import { Progress } from "@/components/ui/progress";
 import api from "@/lib/api";
 
 const CATEGORIES = [
-  { id: "all", label: "All" },
-  { id: "noon_sakinah", label: "Noon Sakinah" },
-  { id: "meem_sakinah", label: "Meem Sakinah" },
-  { id: "madd", label: "Madd Rules" },
-  { id: "qalqalah", label: "Qalqalah" },
+  { id: "all", label: "Fundamental Rules" },
   { id: "waqf_rules", label: "Waqf (Stopping) Rules" },
+  { id: "qalqalah", label: "Qalqalah Ref" },
+];
+
+const TAJWEED_FUNDAMENTALS = [
+  { id: 1, category: "all", name: "Ikhfa", name_arabic: "إخفاء", color: "#3498DB", meaning: "Hiding or Concealment.", rule: "If a Noon Sakinah (نْ) or Tanween (ًٌٍ) is followed by one of 15 specific letters, you \"hide\" the \"N\" sound in your nose (Ghunnah) for two counts instead of pronouncing it clearly." },
+  { id: 2, category: "all", name: "Idgham", name_arabic: "إدغام", color: "#E74C3C", meaning: "Merging or Assimilation.", rule: "Merging the Noon Sakinah or Tanween into the following letter. For example, the \"N\" is not pronounced; it merges into the \"Ya\"." },
+  { id: 3, category: "all", name: "Iqlab", name_arabic: "إقلاب", color: "#9B59B6", meaning: "Conversion or Turning.", rule: "If a Noon Sakinah or Tanween is followed by the letter Ba (ب), the \"N\" sound turns into a small Meem (م) sound." },
+  { id: 4, category: "all", name: "Izhar", name_arabic: "إظهار", color: "#2ECC71", meaning: "Clarity or Manifestation.", rule: "Pronouncing the \"N\" sound clearly without extra nasalization. This happens when followed by \"Throat Letters\" (like Alif, Ha, Kha, 'Ain, Ghain)." },
+  { id: 5, category: "all", name: "Ghunnah", name_arabic: "غنة", color: "#F1C40F", meaning: "Nasalization.", rule: "A sound produced entirely from the nose. It is mandatory for the letters Noon (ن) and Meem (م) when they have a Shaddah (ّ)." },
+  { id: 6, category: "all", name: "Qalqalah", name_arabic: "قلقلة", color: "#E67E22", meaning: "Echoing or Bouncing.", rule: "When one of five letters (ق, ط, ب, ج, د) has a Sukun (stop), you make a bouncing or echoing sound (e.g., Aba becomes Ab-ba)." }
 ];
 
 export default function TajweedHub() {
@@ -44,8 +50,10 @@ export default function TajweedHub() {
       {/* Header */}
       <div className="mb-10">
         <p className="text-[11px] tracking-[0.2em] text-[#E6C364] uppercase mb-2">Tajweed Library</p>
-        <h1 className="text-3xl sm:text-4xl font-light text-[#E5E2E1] mb-2">Knowledge Seekers</h1>
-        <p className="text-sm text-[#9a9a9a]">Explore the art of recitation through our curated repository of Tajweed scholarship</p>
+        <h1 className="text-3xl sm:text-4xl font-light text-[#E5E2E1] leading-tight mb-4">Tajweed is the set of linguistic and pronunciation rules</h1>
+        <p className="text-base text-[#9a9a9a] max-w-3xl leading-relaxed">
+          Used when reciting the Quran to ensure every letter is pronounced correctly with its proper attributes. The cards below represent the fundamental rules of Noon Sakinah, Tanween, and other melodic guidelines.
+        </p>
       </div>
 
       {/* Quick Actions */}
@@ -114,39 +122,27 @@ export default function TajweedHub() {
           )}
 
           {/* Rules Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {filteredRules.map(rule => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
+            {TAJWEED_FUNDAMENTALS.map(rule => (
               <div
                 key={rule.id}
-                data-testid={`tajweed-rule-${rule.id}`}
-                className="bg-[#1a1a22] border border-[#E6C364]/15 p-5 hover:border-[#E6C364]/30 transition-all cursor-pointer group"
-                onClick={() => navigate(`/tajweed/rule/${rule.id}`)}
+                className="bg-[#1a1a22] border border-[#E6C364]/15 p-5 hover:border-[#E6C364]/30 transition-all group"
               >
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-3 border-b border-[#E6C364]/10 pb-3">
                   <div className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full shrink-0" style={{ background: rule.color }} />
-                    <span className="text-sm text-[#E5E2E1] group-hover:text-[#E6C364] transition-colors font-medium">{rule.name}</span>
+                    <span className="text-base text-[#E5E2E1] group-hover:text-[#E6C364] transition-colors font-medium">{rule.name}</span>
                   </div>
-                  <ChevronRight size={14} className="text-[#9a9a9a] group-hover:text-[#E6C364] transition-colors" />
+                  <p className="arabic-text text-2xl" style={{ color: rule.color }} dir="rtl">{rule.name_arabic}</p>
                 </div>
-                <p className="arabic-text text-2xl mb-2" style={{ color: rule.color }} dir="rtl">{rule.name_arabic}</p>
-                <p className="text-[11px] text-[#9a9a9a] line-clamp-2 mb-3">{rule.description}</p>
-                <div className="flex items-center gap-2 text-[10px] text-[#9a9a9a] border-t border-[#E6C364]/10 pt-3">
-                  <Volume2 size={10} />
-                  <span className="arabic-text text-sm" style={{ color: rule.color }}>{rule.example}</span>
-                  <span>&middot; {rule.example_ref}</span>
+                <div className="mb-3">
+                  <span className="text-[10px] uppercase tracking-wider px-2 py-1 rounded bg-[#E6C364]/10 text-[#E6C364] block w-fit mb-2">
+                    {rule.meaning}
+                  </span>
+                  <p className="text-xs text-[#9a9a9a] leading-relaxed block">{rule.rule}</p>
                 </div>
               </div>
             ))}
-          </div>
-
-          {/* Progress */}
-          <div className="bg-[#1a1a22] border border-[#E6C364]/15 p-5 mt-6">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm text-[#E5E2E1]">Your Mastery</p>
-              <span className="text-[11px] text-[#E6C364]">{Math.min(3, filteredRules.length)} of {filteredRules.length} Rules Explored</span>
-            </div>
-            <Progress value={Math.min(3, filteredRules.length) / Math.max(filteredRules.length, 1) * 100} className="h-1.5 bg-[#2a2a36]" />
           </div>
         </TabsContent>
 
