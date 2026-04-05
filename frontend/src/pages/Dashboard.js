@@ -13,13 +13,17 @@ const FEATURED_SURAHS = [
 export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [languages, setLanguages] = useState({});
+  const [prefLang, setPrefLang] = useState(localStorage.getItem("tilawa_pref_lang") || 122);
   const navigate = useNavigate();
 
   useEffect(() => {
-    api.getDashboardStats().then(s => {
-      setStats(s);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    Promise.all([api.getDashboardStats(), api.getTranslations()])
+      .then(([s, t]) => {
+        setStats(s);
+        setLanguages(t);
+        setLoading(false);
+      }).catch(() => setLoading(false));
   }, []);
 
   if (loading) {
@@ -38,12 +42,29 @@ export default function Dashboard() {
   return (
     <div data-testid="dashboard-page" className="max-w-5xl mx-auto px-4 sm:px-8 py-12 pb-32">
       {/* Header */}
-      <div className="mb-10">
-        <p className="text-[11px] tracking-[0.2em] text-[#E6C364] uppercase mb-2">Hifdh Journey</p>
-        <h1 className="text-3xl sm:text-4xl font-light text-[#E5E2E1] mb-1">Mastery & Momentum</h1>
-        <p className="translation-text text-base text-[#9a9a9a] italic">
-          "Verily, He who has ordained the Quran for thee, will bring thee back to the Place of Return."
-        </p>
+      <div className="mb-10 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+        <div>
+          <p className="text-[11px] tracking-[0.2em] text-[#E6C364] uppercase mb-2">Hifdh Journey</p>
+          <h1 className="text-3xl sm:text-4xl font-light text-[#E5E2E1] mb-1">Mastery & Momentum</h1>
+          <p className="translation-text text-base text-[#9a9a9a] italic">
+            "Verily, He who has ordained the Quran for thee, will bring thee back to the Place of Return."
+          </p>
+        </div>
+        <div className="flex items-center gap-2 self-start bg-[#1a1a22] border border-[#E6C364]/15 px-4 py-2 rounded-lg">
+          <span className="text-sm text-[#9a9a9a]">Global Translation:</span>
+          <select 
+            value={prefLang} 
+            onChange={e => {
+              setPrefLang(e.target.value);
+              localStorage.setItem("tilawa_pref_lang", e.target.value);
+            }} 
+            className="bg-transparent text-[#E6C364] outline-none cursor-pointer"
+          >
+            {Object.entries(languages).map(([name, id]) => (
+               <option key={id} value={id}>{name.charAt(0).toUpperCase() + name.slice(1)}</option>
+            ))}
+          </select>
+        </div>
       </div>
 
       {/* Stats Cards */}
