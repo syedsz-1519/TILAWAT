@@ -81,17 +81,6 @@ export default function MushafReader() {
       {surah && surah.bismillah_pre && (
         <div className="text-center py-8 mb-4 border-b border-[#E6C364]/10 animate-fadeIn relative">
           <p className="arabic-text text-3xl sm:text-4xl text-[#E5E2E1]">بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ</p>
-          <div className="absolute right-0 bottom-4 text-sm text-[#9a9a9a]">
-            Translate to: 
-            <select value={selectedLang} onChange={e => {
-              setSelectedLang(e.target.value);
-              localStorage.setItem("tilawa_pref_lang", e.target.value);
-            }} className="ml-2 bg-[#1A1A1A] text-[#E6C364] border border-[#E6C364]/20 p-1 rounded outline-none">
-              {Object.entries(languages).map(([name, id]) => (
-                 <option key={id} value={id}>{name.charAt(0).toUpperCase() + name.slice(1)}</option>
-              ))}
-            </select>
-          </div>
         </div>
       )}
 
