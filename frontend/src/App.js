@@ -14,6 +14,7 @@ import TajweedRuleDetail from "@/pages/TajweedRuleDetail";
 import TajweedQuiz from "@/pages/TajweedQuiz";
 import BookmarksPage from "@/pages/BookmarksPage";
 import Dashboard from "@/pages/Dashboard";
+import HadithLibrary from "@/pages/HadithLibrary";
 import { Menu } from "lucide-react";
 
 function AppLayout() {
@@ -48,6 +49,7 @@ function AppLayout() {
             <Route path="/tajweed/session/:verseKey" element={<TajweedSession />} />
             <Route path="/tajweed/rule/:ruleId" element={<TajweedRuleDetail />} />
             <Route path="/tajweed/quiz" element={<TajweedQuiz />} />
+            <Route path="/hadiths" element={<HadithLibrary />} />
             <Route path="/bookmarks" element={<BookmarksPage />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<Navigate to="/" replace />} />
