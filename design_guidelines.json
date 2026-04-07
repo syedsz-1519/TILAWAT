@@ -1,0 +1,145 @@
+{
+  "theme": "light",
+  "archetype": "Organic & Earthy",
+  "brand_name": "TILAWA",
+  "typography": {
+    "fonts": {
+      "heading": "Cormorant Garamond, serif",
+      "body": "Figtree, sans-serif",
+      "arabic": "Amiri, Noto Naskh Arabic, serif",
+      "mono": "JetBrains Mono, monospace"
+    },
+    "scales": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tight leading-tight",
+      "h2": "text-3xl sm:text-4xl tracking-tight leading-snug",
+      "h3": "text-2xl sm:text-3xl tracking-tight",
+      "h4": "text-xl sm:text-2xl font-medium",
+      "body_lg": "text-lg leading-relaxed",
+      "body": "text-base leading-relaxed",
+      "body_sm": "text-sm leading-normal",
+      "arabic_lg": "text-4xl sm:text-5xl leading-[2.5] tracking-normal",
+      "arabic_md": "text-3xl leading-[2.2]"
+    },
+    "rules": [
+      "DO NOT use generic fonts like Inter, Roboto, or Open Sans for headings.",
+      "Headlines MUST use tight letter spacing (tracking-tight).",
+      "Arabic text MUST have significantly larger line-height (leading-[2.5]) to accommodate diacritics (harakat).",
+      "Use directional utilities (dir='rtl') strictly for Arabic content."
+    ]
+  },
+  "colors": {
+    "background": {
+      "default": "#F9F6F0",
+      "surface": "#FFFFFF",
+      "subtle": "#F2EFEB"
+    },
+    "text": {
+      "primary": "#1C271E",
+      "secondary": "#5C665D",
+      "tertiary": "#8A938C",
+      "inverse": "#FFFFFF"
+    },
+    "primary": {
+      "default": "#2C4C3B",
+      "hover": "#1F382A",
+      "foreground": "#FFFFFF",
+      "light": "#EAF0EC"
+    },
+    "accent": {
+      "gold": "#C07C41",
+      "gold_hover": "#A66935",
+      "gold_light": "#F7EEDF"
+    },
+    "tajweed": {
+      "ikhfa": "#3A5A6B",
+      "idgham": "#4A7C59",
+      "iqlab": "#C07C41",
+      "qalqalah": "#8F3D3D",
+      "ghunnah": "#8B5A70",
+      "madd": "#A96253"
+    },
+    "border": {
+      "default": "#EAE5D9",
+      "focus": "#2C4C3B"
+    }
+  },
+  "spacing_and_layout": {
+    "system": "Tailwind standard scale, utilizing generous padding (p-6 to p-12) for content breathing room, crucial for reading interfaces.",
+    "patterns": {
+      "mushaf_reading": "Centered max-w-4xl container, generous line length, right-aligned Arabic text. Verses distinctly separated, clean background.",
+      "surah_grid": "grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6. Bento-style organic cards.",
+      "card_creator": "Split layout: 1/2 screen config controls, 1/2 screen live preview canvas.",
+      "ai_assistant": "Fixed bottom-right FAB, opening an elegant drawer or side sheet (max-w-md).",
+      "word_breakdown": "Inline flex layout wrapping properly (flex-wrap), RTL direction, with absolute/relative positioned translations below each word."
+    },
+    "rules": [
+      "Containers with borders must have internal padding (p-6 or p-8) to prevent text collision.",
+      "Image constraints: Mobile height limit max-h-[80vh] md:max-h-none.",
+      "Grid items MUST be direct children of grid containers.",
+      "Arabic components must properly handle dir='rtl'."
+    ]
+  },
+  "surfaces_and_elevation": {
+    "cards": {
+      "base": "bg-white rounded-2xl border border-[#EAE5D9] shadow-sm transition-all duration-300",
+      "hover": "hover:shadow-md hover:-translate-y-1 hover:border-[#2C4C3B]/30"
+    },
+    "glassmorphism": {
+      "header": "backdrop-blur-xl bg-[#F9F6F0]/80 border-b border-[#EAE5D9]",
+      "toast": "backdrop-blur-xl bg-white/90 border border-[#EAE5D9] shadow-lg rounded-xl"
+    },
+    "modals_drawers": "bg-[#F9F6F0] rounded-t-3xl sm:rounded-3xl border border-[#EAE5D9]"
+  },
+  "motion_and_interactions": {
+    "hover_states": "All interactive elements must have clear hover states. Color shifts should be subtle and maintain contrast.",
+    "transitions": "Use specific properties (transition-colors, transition-transform) with duration-200 to duration-300.",
+    "audio_playback": "Smooth visual equalizer or pulsing play button state for active word/verse audio.",
+    "ai_chat": "Staggered fade-in for AI messages. Typing indicator using pulsing dots.",
+    "accessibility": "Respect prefers-reduced-motion. Don't rely on motion alone to convey state."
+  },
+  "components_strategy": {
+    "surah_card": "Minimalist card displaying Surah number in an elegant circular/geometric badge, English name (left), Arabic name (right), with verse count subtitle.",
+    "verse_display": "Distinct separation between Arabic text (top/RTL), English Translation (bottom/LTR), and Tajweed colors applied to specific spans within Arabic text.",
+    "word_by_word": "A flex container mapping word objects. Each word block contains Arabic text on top, translation below, clickable to trigger audio. Must break lines responsively.",
+    "card_creator_canvas": "A relative div matching desired aspect ratio (e.g. 1:1 or 4:5), overlaying the selected background image, with draggable/selectable verse text, scaling typography, and a download button (html-to-image).",
+    "ai_fab": "Circular prominent button, shadow-lg, fixed bottom-6 right-6, primary color (#2C4C3B) with spark/chat icon.",
+    "audio_controls": "Sticky bottom bar or inline controls (Play/Pause, Prev, Next, Speed, Reciter dropdown) using Lucide icons.",
+    "libraries": {
+      "ui": "shadcn/ui customized with provided colors and border radiuses",
+      "icons": "lucide-react (default choice)",
+      "animation": "framer-motion for page transitions and drawer slides"
+    }
+  },
+  "media": {
+    "verse_card_bg": {
+      "url": "https://static.prod-images.emergentagent.com/jobs/ce4fd726-9fce-42f9-8cda-bc2279f260f4/images/9e36a9d22409730f260e9b5291cefc5b283cc17678f63f73d9b663c8b7104a34.png",
+      "description": "Minimalist abstract background, warm sand colors, subtle gold geometric lines, soft lighting. Use as the default background in the Card Creator.",
+      "category": "card_background"
+    },
+    "islamic_pattern": {
+      "url": "https://images.unsplash.com/photo-1719194981461-fa0ec450999e?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAxODF8MHwxfHNlYXJjaHwzfHxpc2xhbWljJTIwZ2VvbWV0cmljJTIwcGF0dGVybnxlbnwwfHx8fDE3NzU1ODYwOTd8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Subtle white wall pattern. Use as a low-opacity overlay (bg-repeat, opacity-5) in the hero section or empty states.",
+      "category": "texture"
+    },
+    "architecture_arch": {
+      "url": "https://images.unsplash.com/photo-1602513755672-921523867741?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHwyfHxtaW5pbWFsaXN0JTIwYXJjaGl0ZWN0dXJlJTIwYXJjaHxlbnwwfHx8fDE3NzU1ODYwOTh8MA&ixlib=rb-4.1.0&q=85",
+      "description": "Minimalist concrete archway. Can be used in onboarding, auth screens, or About/Hero placeholders.",
+      "category": "hero"
+    }
+  },
+  "accessibility_and_testing": {
+    "contrast": "Ensure all text, especially Tajweed colors, meet WCAG AA contrast against the #F9F6F0 background.",
+    "data_testid": "All interactive elements MUST include data-testid attribute (e.g., data-testid='play-audio-btn').",
+    "rtl_support": "Ensure proper use of <html dir='rtl'> for Arabic segments to ensure natural reading flow and punctuation rendering."
+  },
+  "instructions_to_main_agent": [
+    "Implement layout strictly using Tailwind CSS utility classes and Shadcn components as base.",
+    "Do NOT use 'Inter' font for headings; stick to Cormorant Garamond for English headings and Figtree for body text.",
+    "Use 'Amiri' or 'Noto Naskh Arabic' for all Arabic text. Increase line-height significantly to prevent cutting off diacritics.",
+    "Ensure the Mushaf Reading interface is distraction-free. Keep padding generous.",
+    "For Tajweed highlighting, implement a mapping function that wraps specific letters/words in spans with the respective tajweed color classes defined above.",
+    "Integrate the 'html-to-image' library for the Card Creator feature.",
+    "Do NOT use placeholder text or dummy image URLs. ONLY use the media URLs provided in this JSON.",
+    "In the word-by-word breakdown, ensure the flex layout allows wrapping when screen size decreases, keeping the Arabic word above its corresponding translation."
+  ]
+}
