@@ -155,6 +155,100 @@ class TilawaAPITester:
                 print(f"   ⚠️  Search response structure unexpected")
         return success
 
+    def test_translations_api(self):
+        """Test translations endpoint - should return 18+ languages"""
+        success, response = self.run_test("Get Translations", "GET", "translations", 200)
+        if success and isinstance(response, dict):
+            lang_count = len(response)
+            if lang_count >= 18:
+                print(f"   ✅ Found {lang_count} languages (requirement: 18+)")
+                # Check for key Indian languages
+                indian_langs = ['hi', 'ur', 'te', 'ta', 'kn', 'ml', 'mr', 'pa', 'bn', 'gu']
+                found_indian = [lang for lang in indian_langs if lang in response]
+                print(f"   ✅ Indian languages found: {', '.join(found_indian)}")
+            else:
+                print(f"   ❌ Expected 18+ languages, got {lang_count}")
+                success = False
+        return success
+
+    def test_reciters_api(self):
+        """Test reciters endpoint - should return 5 reciters"""
+        success, response = self.run_test("Get Reciters", "GET", "reciters", 200)
+        if success and isinstance(response, dict):
+            reciter_count = len(response)
+            if reciter_count >= 5:
+                print(f"   ✅ Found {reciter_count} reciters (requirement: 5)")
+                if 'yasser_dossari' in response:
+                    print(f"   ✅ Yasser Al-Dossari (default) found")
+                else:
+                    print(f"   ⚠️  Yasser Al-Dossari not found as default")
+            else:
+                print(f"   ❌ Expected 5 reciters, got {reciter_count}")
+                success = False
+        return success
+
+    def test_surah_hindi_translation(self):
+        """Test surah with Hindi translation"""
+        success, response = self.run_test("Get Surah 1 with Hindi", "GET", "surah/1?language=hi", 200)
+        if success and isinstance(response, dict):
+            verses = response.get('verses', [])
+            translation_info = response.get('translation', {})
+            if verses and translation_info.get('name') == 'Hindi':
+                print(f"   ✅ Hindi translation loaded successfully")
+                # Check if verses have Hindi translations
+                hindi_verse = next((v for v in verses if v.get('translation')), None)
+                if hindi_verse:
+                    print(f"   ✅ Hindi verse text found: {hindi_verse['translation'][:50]}...")
+                else:
+                    print(f"   ⚠️  No Hindi translation text in verses")
+            else:
+                print(f"   ❌ Hindi translation not properly loaded")
+                success = False
+        return success
+
+    def test_library_books_api(self):
+        """Test library books endpoint"""
+        success, response = self.run_test("Get Library Books", "GET", "library/books", 200)
+        if success and isinstance(response, dict):
+            book_count = len(response)
+            if book_count >= 3:
+                print(f"   ✅ Found {book_count} library books")
+                expected_books = ['mukashafatul_quloob', 'muntakhab_ahadees', 'shifa_shareef']
+                found_books = [book for book in expected_books if book in response]
+                print(f"   ✅ Expected books found: {', '.join(found_books)}")
+            else:
+                print(f"   ❌ Expected 3+ books, got {book_count}")
+                success = False
+        return success
+
+    def test_ai_chat_research_mode(self):
+        """Test AI chat with research mode (RAG)"""
+        test_message = "Tell me about spiritual purification from Islamic sources"
+        success, response = self.run_test(
+            "AI Chat Research Mode", 
+            "POST", 
+            "chat", 
+            200,
+            data={
+                "message": test_message, 
+                "session_id": f"{self.session_id}_research",
+                "research_mode": True,
+                "language": "en"
+            }
+        )
+        if success and isinstance(response, dict):
+            if response.get('research_mode') == True:
+                print(f"   ✅ Research mode enabled successfully")
+                ai_response = response.get('response', '')
+                if len(ai_response) > 50:
+                    print(f"   ✅ Research mode response: {ai_response[:100]}...")
+                else:
+                    print(f"   ⚠️  Research mode response seems short")
+            else:
+                print(f"   ❌ Research mode not enabled in response")
+                success = False
+        return success
+
     def test_invalid_endpoints(self):
         """Test error handling for invalid requests"""
         # Test invalid surah number
@@ -166,7 +260,7 @@ class TilawaAPITester:
         return success1 and success2
 
 def main():
-    print("🕌 TILAWA API Testing Suite")
+    print("🕌 TILAWA v2 API Testing Suite")
     print("=" * 50)
     
     tester = TilawaAPITester()
@@ -177,17 +271,26 @@ def main():
     print("\n📡 Basic Connectivity Tests")
     test_results.append(tester.test_health_check())
     
+    print("\n🌍 Multilingual Support Tests")
+    test_results.append(tester.test_translations_api())
+    test_results.append(tester.test_reciters_api())
+    test_results.append(tester.test_surah_hindi_translation())
+    
     print("\n📖 Quran Data Tests")
     test_results.append(tester.test_get_surahs())
     test_results.append(tester.test_get_surah_details())
     test_results.append(tester.test_specific_verse())
     test_results.append(tester.test_search_functionality())
     
+    print("\n📚 Library & RAG Tests")
+    test_results.append(tester.test_library_books_api())
+    
     print("\n🎓 Tajweed Tests")
     test_results.append(tester.test_get_tajweed_lessons())
     
     print("\n🤖 AI Integration Tests")
     test_results.append(tester.test_ai_chat())
+    test_results.append(tester.test_ai_chat_research_mode())
     
     print("\n🚫 Error Handling Tests")
     test_results.append(tester.test_invalid_endpoints())

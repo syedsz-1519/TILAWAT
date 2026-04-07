@@ -1,12 +1,24 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { BrowserRouter, Routes, Route, useNavigate, useLocation, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Book, MessageCircle, Palette, Type, GraduationCap, Home, ChevronLeft, Play, Pause, Volume2, Download, Send, X, Loader2 } from "lucide-react";
+import { 
+  Book, MessageCircle, Palette, GraduationCap, Home, ChevronLeft, 
+  Play, Pause, Download, Send, X, Loader2, Globe, Volume2, 
+  BookOpen, Search, Settings, ChevronDown, Check, Library
+} from "lucide-react";
 import axios from "axios";
 import "./App.css";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
+
+// ==================== CONTEXT & STATE ====================
+
+const defaultSettings = {
+  language: "en",
+  reciter: "yasser_dossari",
+  researchMode: false
+};
 
 // ==================== COMPONENTS ====================
 
@@ -19,20 +31,21 @@ const BottomNav = () => {
     { path: "/", icon: Home, label: "Home" },
     { path: "/tajweed", icon: GraduationCap, label: "Tajweed" },
     { path: "/cards", icon: Palette, label: "Cards" },
+    { path: "/library", icon: Library, label: "Library" },
   ];
   
   return (
     <nav className="bottom-nav" data-testid="bottom-nav">
-      <div className="flex justify-around items-center max-w-md mx-auto">
+      <div className="flex justify-around items-center max-w-lg mx-auto">
         {navItems.map(({ path, icon: Icon, label }) => (
           <button
             key={path}
             onClick={() => navigate(path)}
-            className={`bottom-nav-item px-4 py-1 ${location.pathname === path ? 'active' : ''}`}
+            className={`bottom-nav-item px-3 py-1 ${location.pathname === path ? 'active' : ''}`}
             data-testid={`nav-${label.toLowerCase()}`}
           >
             <Icon size={20} />
-            <span>{label}</span>
+            <span className="text-xs">{label}</span>
           </button>
         ))}
       </div>
@@ -64,6 +77,117 @@ const Header = ({ title, showBack = false, rightAction = null }) => {
         {rightAction}
       </div>
     </header>
+  );
+};
+
+// Language Selector
+const LanguageSelector = ({ value, onChange, translations }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // Handle case when translations is empty
+  if (!translations || Object.keys(translations).length === 0) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-default)]">
+        <Globe size={16} className="text-[var(--primary)]" />
+        <span className="text-sm">Loading...</span>
+      </div>
+    );
+  }
+  
+  const selectedLang = translations[value] || translations["en"] || Object.values(translations)[0];
+  
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-default)] hover:border-[var(--primary)] transition-colors"
+        data-testid="language-selector"
+      >
+        <Globe size={16} className="text-[var(--primary)]" />
+        <span className="text-sm">{selectedLang.name}</span>
+        <ChevronDown size={14} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute top-full mt-2 right-0 w-64 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl shadow-lg z-50 max-h-80 overflow-y-auto"
+          >
+            {Object.entries(translations).map(([code, lang]) => (
+              <button
+                key={code}
+                onClick={() => { onChange(code); setIsOpen(false); }}
+                className={`w-full px-4 py-2 text-left text-sm hover:bg-[var(--primary-light)] flex items-center justify-between ${value === code ? 'bg-[var(--primary-light)]' : ''}`}
+                data-testid={`lang-${code}`}
+              >
+                <span>{lang.name}</span>
+                {value === code && <Check size={14} className="text-[var(--primary)]" />}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+// Reciter Selector
+const ReciterSelector = ({ value, onChange, reciters }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // Handle case when reciters is empty
+  if (!reciters || Object.keys(reciters).length === 0) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-default)]">
+        <Volume2 size={16} className="text-[var(--accent-gold)]" />
+        <span className="text-sm">Loading...</span>
+      </div>
+    );
+  }
+  
+  const selectedReciter = reciters[value] || reciters["yasser_dossari"] || Object.values(reciters)[0];
+  
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--bg-surface)] border border-[var(--border-default)] hover:border-[var(--primary)] transition-colors"
+        data-testid="reciter-selector"
+      >
+        <Volume2 size={16} className="text-[var(--accent-gold)]" />
+        <span className="text-sm truncate max-w-[150px]">{selectedReciter.name}</span>
+        <ChevronDown size={14} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="absolute top-full mt-2 right-0 w-72 bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-xl shadow-lg z-50"
+          >
+            {Object.entries(reciters).map(([id, reciter]) => (
+              <button
+                key={id}
+                onClick={() => { onChange(id); setIsOpen(false); }}
+                className={`w-full px-4 py-3 text-left hover:bg-[var(--primary-light)] flex items-center justify-between ${value === id ? 'bg-[var(--primary-light)]' : ''}`}
+                data-testid={`reciter-${id}`}
+              >
+                <div>
+                  <p className="text-sm font-medium">{reciter.name}</p>
+                  <p className="text-xs text-[var(--text-tertiary)]">{reciter.style}</p>
+                </div>
+                {value === id && <Check size={14} className="text-[var(--primary)]" />}
+              </button>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 };
 
@@ -106,7 +230,7 @@ const SurahCard = ({ surah, index }) => {
 };
 
 // Verse Component
-const VerseBlock = ({ verse, isPlaying, onPlay }) => {
+const VerseBlock = ({ verse, isPlaying, onPlay, translationDirection }) => {
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -129,9 +253,13 @@ const VerseBlock = ({ verse, isPlaying, onPlay }) => {
         {verse.arabic}
       </div>
       
-      {verse.translation_en && (
-        <p className="text-[var(--text-secondary)] leading-relaxed text-base sm:text-lg">
-          {verse.translation_en}
+      {verse.translation && (
+        <p 
+          className="text-[var(--text-secondary)] leading-relaxed text-base sm:text-lg"
+          dir={translationDirection}
+          style={{ textAlign: translationDirection === 'rtl' ? 'right' : 'left' }}
+        >
+          {verse.translation}
         </p>
       )}
     </motion.div>
@@ -139,11 +267,13 @@ const VerseBlock = ({ verse, isPlaying, onPlay }) => {
 };
 
 // AI Chat Component
-const AIChat = ({ isOpen, onClose }) => {
+const AIChat = ({ isOpen, onClose, translations }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [sessionId] = useState(() => `session_${Date.now()}`);
+  const [researchMode, setResearchMode] = useState(false);
+  const [language, setLanguage] = useState("en");
   
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
@@ -156,10 +286,16 @@ const AIChat = ({ isOpen, onClose }) => {
     try {
       const response = await axios.post(`${API}/chat`, {
         message: userMessage,
-        session_id: sessionId
+        session_id: sessionId,
+        research_mode: researchMode,
+        language: language
       });
       
-      setMessages(prev => [...prev, { role: "assistant", content: response.data.response }]);
+      setMessages(prev => [...prev, { 
+        role: "assistant", 
+        content: response.data.response,
+        research_mode: response.data.research_mode
+      }]);
     } catch (error) {
       console.error("Chat error:", error);
       setMessages(prev => [...prev, { role: "assistant", content: "I apologize, I encountered an error. Please try again." }]);
@@ -183,12 +319,12 @@ const AIChat = ({ isOpen, onClose }) => {
         animate={{ x: 0 }}
         exit={{ x: "100%" }}
         transition={{ type: "spring", damping: 25 }}
-        className="absolute right-0 top-0 bottom-0 w-full sm:max-w-md bg-[var(--bg-default)] shadow-xl"
+        className="absolute right-0 top-0 bottom-0 w-full sm:max-w-md bg-[var(--bg-default)] shadow-xl flex flex-col"
         onClick={e => e.stopPropagation()}
         data-testid="ai-chat-panel"
       >
         {/* Chat Header */}
-        <div className="glass-header p-4 flex items-center justify-between">
+        <div className="glass-header p-4 flex items-center justify-between flex-shrink-0">
           <div>
             <h2 className="font-heading text-lg font-semibold">Tilawa AI</h2>
             <p className="text-sm text-[var(--text-secondary)]">Ask about the Quran</p>
@@ -202,15 +338,39 @@ const AIChat = ({ isOpen, onClose }) => {
           </button>
         </div>
         
+        {/* Research Mode Toggle */}
+        <div className="px-4 py-3 border-b border-[var(--border-default)] flex items-center justify-between bg-[var(--bg-subtle)]">
+          <div className="flex items-center gap-2">
+            <BookOpen size={16} className="text-[var(--accent-gold)]" />
+            <span className="text-sm font-medium">Research Mode</span>
+          </div>
+          <button
+            onClick={() => setResearchMode(!researchMode)}
+            className={`w-12 h-6 rounded-full transition-colors relative ${researchMode ? 'bg-[var(--primary)]' : 'bg-[var(--border-default)]'}`}
+            data-testid="research-mode-toggle"
+          >
+            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${researchMode ? 'left-7' : 'left-1'}`} />
+          </button>
+        </div>
+        
+        {researchMode && (
+          <div className="px-4 py-2 bg-[var(--accent-gold-light)] text-sm text-[var(--accent-gold)]">
+            📚 Using Islamic library for authentic sources
+          </div>
+        )}
+        
         {/* Messages */}
-        <div className="h-[calc(100%-8rem)] overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.length === 0 && (
             <div className="text-center py-12">
               <div className="w-16 h-16 mx-auto mb-4 bg-[var(--primary-light)] rounded-full flex items-center justify-center">
                 <MessageCircle size={28} className="text-[var(--primary)]" />
               </div>
               <p className="text-[var(--text-secondary)]">
-                Ask me anything about the Quran, Tajweed, or Islamic teachings.
+                {researchMode 
+                  ? "Ask questions with authentic scholarly sources"
+                  : "Ask me anything about the Quran, Tajweed, or Islamic teachings."
+                }
               </p>
             </div>
           )}
@@ -227,6 +387,11 @@ const AIChat = ({ isOpen, onClose }) => {
                   ? 'bg-[var(--primary)] text-white rounded-br-sm' 
                   : 'bg-[var(--bg-surface)] border border-[var(--border-default)] rounded-bl-sm'
               }`}>
+                {msg.research_mode && (
+                  <span className="inline-block px-2 py-0.5 mb-2 text-xs bg-[var(--accent-gold-light)] text-[var(--accent-gold)] rounded-full">
+                    📚 From Library
+                  </span>
+                )}
                 <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
               </div>
             </motion.div>
@@ -242,14 +407,14 @@ const AIChat = ({ isOpen, onClose }) => {
         </div>
         
         {/* Input */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-[var(--bg-surface)] border-t border-[var(--border-default)]">
+        <div className="p-4 bg-[var(--bg-surface)] border-t border-[var(--border-default)] flex-shrink-0">
           <div className="flex gap-2">
             <input
               type="text"
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyPress={e => e.key === 'Enter' && sendMessage()}
-              placeholder="Ask about the Quran..."
+              placeholder={researchMode ? "Ask with scholarly sources..." : "Ask about the Quran..."}
               className="flex-1 px-4 py-3 rounded-full border border-[var(--border-default)] bg-[var(--bg-default)] focus:outline-none focus:border-[var(--primary)] transition-colors"
               data-testid="chat-input"
             />
@@ -279,7 +444,7 @@ const Loading = () => (
 // ==================== PAGES ====================
 
 // Home Page - Surah List
-const HomePage = () => {
+const HomePage = ({ translations, reciters, settings, onSettingsChange }) => {
   const [surahs, setSurahs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -306,7 +471,23 @@ const HomePage = () => {
   
   return (
     <div className="min-h-screen pb-24">
-      <Header title="TILAWA تلاوة" />
+      <Header 
+        title="TILAWA تلاوة" 
+        rightAction={
+          <div className="flex items-center gap-2">
+            <LanguageSelector 
+              value={settings.language} 
+              onChange={(lang) => onSettingsChange({ ...settings, language: lang })}
+              translations={translations}
+            />
+            <ReciterSelector
+              value={settings.reciter}
+              onChange={(reciter) => onSettingsChange({ ...settings, reciter })}
+              reciters={reciters}
+            />
+          </div>
+        }
+      />
       
       {/* Hero Section */}
       <div className="relative px-4 py-8 sm:py-12 bg-gradient-to-b from-[var(--primary-light)] to-transparent">
@@ -315,17 +496,18 @@ const HomePage = () => {
             The Noble Quran
           </h2>
           <p className="text-[var(--text-secondary)] mb-6">
-            114 Surahs · 6,236 Verses · Read, Listen & Learn
+            114 Surahs · 6,236 Verses · 12+ Languages · Multiple Reciters
           </p>
           
           {/* Search */}
-          <div className="max-w-md mx-auto">
+          <div className="max-w-md mx-auto relative">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
             <input
               type="text"
               placeholder="Search surahs by name or number..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="w-full px-5 py-3 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] focus:outline-none focus:border-[var(--primary)] shadow-sm"
+              className="w-full pl-11 pr-5 py-3 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] focus:outline-none focus:border-[var(--primary)] shadow-sm"
               data-testid="search-input"
             />
           </div>
@@ -355,31 +537,35 @@ const HomePage = () => {
 };
 
 // Surah Reading Page (Mushaf)
-const SurahPage = () => {
+const SurahPage = ({ translations, reciters, settings, onSettingsChange }) => {
   const { surahNumber } = useParams();
   const [surahData, setSurahData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [playingVerse, setPlayingVerse] = useState(null);
   const [audio] = useState(new Audio());
   
+  const fetchSurah = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`${API}/surah/${surahNumber}`, {
+        params: { language: settings.language, reciter: settings.reciter }
+      });
+      setSurahData(response.data);
+    } catch (error) {
+      console.error("Error fetching surah:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [surahNumber, settings.language, settings.reciter]);
+  
   useEffect(() => {
-    const fetchSurah = async () => {
-      try {
-        const response = await axios.get(`${API}/surah/${surahNumber}`);
-        setSurahData(response.data);
-      } catch (error) {
-        console.error("Error fetching surah:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchSurah();
     
     return () => {
       audio.pause();
       audio.src = "";
     };
-  }, [surahNumber, audio]);
+  }, [fetchSurah, audio]);
   
   const handlePlay = (verse) => {
     if (playingVerse === verse.ayah) {
@@ -397,7 +583,7 @@ const SurahPage = () => {
   if (loading) return <Loading />;
   if (!surahData) return <div className="text-center py-20">Surah not found</div>;
   
-  const { info, verses } = surahData;
+  const { info, verses, translation, reciter } = surahData;
   
   return (
     <div className="min-h-screen pb-24" data-testid="mushaf-screen">
@@ -405,16 +591,29 @@ const SurahPage = () => {
         title={info?.englishName || `Surah ${surahNumber}`}
         showBack={true}
         rightAction={
-          <div className="text-right">
-            <span className="arabic-text text-lg text-[var(--primary)]" dir="rtl">{info?.name}</span>
+          <div className="flex items-center gap-2">
+            <LanguageSelector 
+              value={settings.language} 
+              onChange={(lang) => onSettingsChange({ ...settings, language: lang })}
+              translations={translations}
+            />
+            <ReciterSelector
+              value={settings.reciter}
+              onChange={(r) => onSettingsChange({ ...settings, reciter: r })}
+              reciters={reciters}
+            />
           </div>
         }
       />
       
       {/* Surah Info */}
       <div className="bg-[var(--primary-light)] px-4 py-6 text-center">
+        <p className="arabic-text text-2xl text-[var(--primary)] mb-2" dir="rtl">{info?.name}</p>
         <p className="text-[var(--text-secondary)]">
           {info?.englishNameTranslation} · {info?.numberOfAyahs} verses · {info?.revelationType}
+        </p>
+        <p className="text-sm text-[var(--text-tertiary)] mt-2">
+          {translation?.name} · {reciter?.name}
         </p>
       </div>
       
@@ -438,6 +637,7 @@ const SurahPage = () => {
             verse={verse}
             isPlaying={playingVerse === verse.ayah}
             onPlay={handlePlay}
+            translationDirection={translation?.direction || "ltr"}
           />
         ))}
       </div>
@@ -549,19 +749,163 @@ const TajweedPage = () => {
   );
 };
 
+// Library Page (Offline Reader)
+const LibraryPage = () => {
+  const [books, setBooks] = useState({});
+  const [chunks, setChunks] = useState([]);
+  const [selectedBook, setSelectedBook] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchLibrary = async () => {
+      try {
+        const [booksRes, chunksRes] = await Promise.all([
+          axios.get(`${API}/library/books`),
+          axios.get(`${API}/library/chunks?limit=200`)
+        ]);
+        setBooks(booksRes.data);
+        setChunks(chunksRes.data);
+      } catch (error) {
+        console.error("Error fetching library:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLibrary();
+  }, []);
+  
+  const handleSearch = async () => {
+    if (!searchQuery.trim()) return;
+    
+    try {
+      const response = await axios.post(`${API}/library/search?q=${encodeURIComponent(searchQuery)}`);
+      setSearchResults(response.data);
+    } catch (error) {
+      console.error("Search error:", error);
+    }
+  };
+  
+  const filteredChunks = selectedBook 
+    ? chunks.filter(c => c.book_name === selectedBook)
+    : chunks;
+  
+  return (
+    <div className="min-h-screen pb-24" data-testid="library-page">
+      <Header title="Islamic Library" />
+      
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        {/* Search */}
+        <div className="mb-6 flex gap-2">
+          <div className="flex-1 relative">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--text-tertiary)]" />
+            <input
+              type="text"
+              placeholder="Search library..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onKeyPress={e => e.key === 'Enter' && handleSearch()}
+              className="w-full pl-11 pr-4 py-3 rounded-full border border-[var(--border-default)] bg-[var(--bg-surface)] focus:outline-none focus:border-[var(--primary)]"
+              data-testid="library-search"
+            />
+          </div>
+          <button onClick={handleSearch} className="btn-primary px-6" data-testid="library-search-btn">
+            Search
+          </button>
+        </div>
+        
+        {/* Search Results */}
+        {searchResults.length > 0 && (
+          <div className="mb-6">
+            <h3 className="font-semibold mb-3">Search Results</h3>
+            <div className="space-y-3">
+              {searchResults.map((chunk, i) => (
+                <div key={i} className="card-base p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="px-2 py-1 bg-[var(--accent-gold-light)] text-[var(--accent-gold)] text-xs rounded-full">
+                      {chunk.book_name}
+                    </span>
+                    <span className="text-xs text-[var(--text-tertiary)]">Page {chunk.page_number}</span>
+                  </div>
+                  <p className="text-sm text-[var(--text-secondary)]">{chunk.content}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        
+        {/* Book Tabs */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          <button
+            onClick={() => setSelectedBook(null)}
+            className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${!selectedBook ? 'bg-[var(--primary)] text-white' : 'bg-[var(--bg-surface)] border border-[var(--border-default)]'}`}
+            data-testid="library-all-btn"
+          >
+            All Books
+          </button>
+          {Object.entries(books).map(([key, book]) => (
+            <button
+              key={key}
+              onClick={() => setSelectedBook(key)}
+              className={`px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${selectedBook === key ? 'bg-[var(--primary)] text-white' : 'bg-[var(--bg-surface)] border border-[var(--border-default)]'}`}
+              data-testid={`library-book-${key}`}
+            >
+              {book.title}
+            </button>
+          ))}
+        </div>
+        
+        {loading ? (
+          <Loading />
+        ) : chunks.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 mx-auto mb-4 bg-[var(--primary-light)] rounded-full flex items-center justify-center">
+              <BookOpen size={28} className="text-[var(--primary)]" />
+            </div>
+            <p className="text-[var(--text-secondary)] mb-4">
+              No books uploaded yet. Upload Islamic PDFs to build your library.
+            </p>
+            <p className="text-sm text-[var(--text-tertiary)]">
+              Supported: Mukashafatul Quloob, Muntakhab Ahadees, Ash-Shifa
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filteredChunks.slice(0, 50).map((chunk, i) => (
+              <div key={chunk.id || i} className="card-base p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="px-2 py-1 bg-[var(--accent-gold-light)] text-[var(--accent-gold)] text-xs rounded-full">
+                    {chunk.book_name}
+                  </span>
+                  <span className="text-xs text-[var(--text-tertiary)]">Page {chunk.page_number}</span>
+                </div>
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{chunk.content}</p>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // Card Creator Page
-const CardCreatorPage = () => {
+const CardCreatorPage = ({ translations }) => {
   const [surahNumber, setSurahNumber] = useState(1);
   const [ayahNumber, setAyahNumber] = useState(1);
   const [verse, setVerse] = useState(null);
   const [style, setStyle] = useState("dark");
   const [loading, setLoading] = useState(false);
   const [showTranslation, setShowTranslation] = useState(true);
+  const [language, setLanguage] = useState("en");
   
   const fetchVerse = async () => {
     setLoading(true);
     try {
-      const response = await axios.get(`${API}/verse/${surahNumber}/${ayahNumber}`);
+      const response = await axios.get(`${API}/verse/${surahNumber}/${ayahNumber}`, {
+        params: { language }
+      });
       setVerse(response.data);
     } catch (error) {
       console.error("Error fetching verse:", error);
@@ -573,7 +917,7 @@ const CardCreatorPage = () => {
   
   useEffect(() => {
     fetchVerse();
-  }, [surahNumber, ayahNumber]);
+  }, [surahNumber, ayahNumber, language]);
   
   const downloadCard = async () => {
     const { toPng } = await import('html-to-image');
@@ -634,6 +978,15 @@ const CardCreatorPage = () => {
                 </div>
               </div>
               
+              <div className="mb-4">
+                <label className="block text-sm text-[var(--text-secondary)] mb-1">Translation</label>
+                <LanguageSelector
+                  value={language}
+                  onChange={setLanguage}
+                  translations={translations}
+                />
+              </div>
+              
               <button 
                 onClick={fetchVerse}
                 className="btn-primary w-full"
@@ -671,7 +1024,7 @@ const CardCreatorPage = () => {
                   className="w-4 h-4 accent-[var(--primary)]"
                   data-testid="show-translation-toggle"
                 />
-                <span className="text-sm">Show English Translation</span>
+                <span className="text-sm">Show Translation</span>
               </label>
             </div>
             
@@ -705,9 +1058,9 @@ const CardCreatorPage = () => {
                   {verse.arabic}
                 </p>
                 
-                {showTranslation && verse.translation_en && (
+                {showTranslation && verse.translation && (
                   <p className={`text-sm sm:text-base leading-relaxed mb-4 max-w-md ${style === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
-                    "{verse.translation_en}"
+                    "{verse.translation}"
                   </p>
                 )}
                 
@@ -735,15 +1088,52 @@ const CardCreatorPage = () => {
 
 function App() {
   const [chatOpen, setChatOpen] = useState(false);
+  const [translations, setTranslations] = useState({});
+  const [reciters, setReciters] = useState({});
+  const [settings, setSettings] = useState(defaultSettings);
+  
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const [transRes, recRes] = await Promise.all([
+          axios.get(`${API}/translations`),
+          axios.get(`${API}/reciters`)
+        ]);
+        setTranslations(transRes.data);
+        setReciters(recRes.data);
+      } catch (error) {
+        console.error("Error fetching config:", error);
+        // Fallback
+        setTranslations({ en: { id: "en.asad", name: "English", direction: "ltr" } });
+        setReciters({ yasser_dossari: { id: "yasser_dossari", name: "Yasser Al-Dossari", style: "Murattal" } });
+      }
+    };
+    fetchConfig();
+  }, []);
   
   return (
     <div className="App">
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/surah/:surahNumber" element={<SurahPage />} />
+          <Route path="/" element={
+            <HomePage 
+              translations={translations} 
+              reciters={reciters} 
+              settings={settings} 
+              onSettingsChange={setSettings} 
+            />
+          } />
+          <Route path="/surah/:surahNumber" element={
+            <SurahPage 
+              translations={translations} 
+              reciters={reciters} 
+              settings={settings} 
+              onSettingsChange={setSettings} 
+            />
+          } />
           <Route path="/tajweed" element={<TajweedPage />} />
-          <Route path="/cards" element={<CardCreatorPage />} />
+          <Route path="/cards" element={<CardCreatorPage translations={translations} />} />
+          <Route path="/library" element={<LibraryPage />} />
         </Routes>
         
         <BottomNav />
@@ -759,7 +1149,7 @@ function App() {
         
         {/* AI Chat Panel */}
         <AnimatePresence>
-          {chatOpen && <AIChat isOpen={chatOpen} onClose={() => setChatOpen(false)} />}
+          {chatOpen && <AIChat isOpen={chatOpen} onClose={() => setChatOpen(false)} translations={translations} />}
         </AnimatePresence>
       </BrowserRouter>
     </div>

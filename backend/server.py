@@ -1,4 +1,4 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Query
+from fastapi import FastAPI, APIRouter, HTTPException, Query, UploadFile, File, BackgroundTasks
 from fastapi.responses import StreamingResponse
 from dotenv import load_dotenv
 from starlette.middleware.cors import CORSMiddleware
@@ -7,12 +7,16 @@ import os
 import logging
 from pathlib import Path
 from pydantic import BaseModel, Field, ConfigDict
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import uuid
 from datetime import datetime, timezone
 import httpx
 import json
 import asyncio
+import numpy as np
+from sklearn.metrics.pairwise import cosine_similarity
+import sqlite3
+import aiofiles
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
@@ -23,7 +27,7 @@ client = AsyncIOMotorClient(mongo_url)
 db = client[os.environ['DB_NAME']]
 
 # Create the main app
-app = FastAPI(title="TILAWA API", description="Quranic Ecosystem Backend")
+app = FastAPI(title="TILAWA API", description="Quranic Ecosystem Backend with RAG")
 
 # Create router with /api prefix
 api_router = APIRouter(prefix="/api")
@@ -35,42 +39,92 @@ logger = logging.getLogger(__name__)
 # ==================== MODELS ====================
 
 class ChatMessage(BaseModel):
-    role: str  # "user" or "assistant"
+    role: str
     content: str
     timestamp: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 class ChatRequest(BaseModel):
     message: str
     session_id: Optional[str] = None
+    research_mode: bool = False  # Enable RAG from library
+    language: str = "en"  # Translation language
 
-class ChatSession(BaseModel):
-    model_config = ConfigDict(extra="ignore")
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    messages: List[dict] = []
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-    updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+class TranslationRequest(BaseModel):
+    surah: int
+    language: str
 
-class SurahInfo(BaseModel):
-    number: int
+class LibraryChunk(BaseModel):
+    id: str
+    book_name: str
+    page_number: int
+    content: str
+    embedding: Optional[List[float]] = None
+
+class ReciterInfo(BaseModel):
+    id: str
     name: str
-    english_name: str
-    english_translation: str
-    revelation_type: str
-    number_of_ayahs: int
+    style: str
+    audio_base_url: str
 
-class VerseInfo(BaseModel):
-    surah: int
-    ayah: int
-    arabic: str
-    translation_en: Optional[str] = None
-    translation_ur: Optional[str] = None
-    audio_url: Optional[str] = None
+# ==================== MULTILINGUAL TRANSLATIONS ====================
 
-class CardExportRequest(BaseModel):
-    surah: int
-    ayah: int
-    style: str = "dark"  # dark, parchment, minimal
-    include_translation: bool = True
+SUPPORTED_TRANSLATIONS = {
+    # Indian Languages
+    "hi": {"id": "hi.hindi", "name": "Hindi", "direction": "ltr", "font": "Noto Sans Devanagari"},
+    "ur": {"id": "ur.jalandhry", "name": "Urdu (Jalandhry)", "direction": "rtl", "font": "Noto Nastaliq Urdu"},
+    "ur_mufti_taqi": {"id": "ur.muftiTaqiUsmani", "name": "Urdu (Mufti Taqi Usmani)", "direction": "rtl", "font": "Noto Nastaliq Urdu"},
+    "te": {"id": "te.telugu", "name": "Telugu", "direction": "ltr", "font": "Noto Sans Telugu"},
+    "ta": {"id": "ta.tamil", "name": "Tamil", "direction": "ltr", "font": "Noto Sans Tamil"},
+    "kn": {"id": "kn.kannada", "name": "Kannada", "direction": "ltr", "font": "Noto Sans Kannada"},
+    "ml": {"id": "ml.malayalam", "name": "Malayalam", "direction": "ltr", "font": "Noto Sans Malayalam"},
+    "mr": {"id": "mr.marathi", "name": "Marathi", "direction": "ltr", "font": "Noto Sans Devanagari"},
+    "pa": {"id": "pa.punjabi", "name": "Punjabi", "direction": "ltr", "font": "Noto Sans Gurmukhi"},
+    "bn": {"id": "bn.bengali", "name": "Bengali", "direction": "ltr", "font": "Noto Sans Bengali"},
+    "gu": {"id": "gu.gujarati", "name": "Gujarati", "direction": "ltr", "font": "Noto Sans Gujarati"},
+    "or": {"id": "or.odia", "name": "Odia", "direction": "ltr", "font": "Noto Sans Oriya"},
+    # Common Languages
+    "en": {"id": "en.asad", "name": "English (Asad)", "direction": "ltr", "font": "Figtree"},
+    "en_sahih": {"id": "en.sahih", "name": "English (Sahih Intl)", "direction": "ltr", "font": "Figtree"},
+    "ar": {"id": "quran-simple", "name": "Arabic (Simple)", "direction": "rtl", "font": "Amiri"},
+    "tr": {"id": "tr.ates", "name": "Turkish", "direction": "ltr", "font": "Figtree"},
+    "id": {"id": "id.indonesian", "name": "Indonesian", "direction": "ltr", "font": "Figtree"},
+    "fr": {"id": "fr.hamidullah", "name": "French", "direction": "ltr", "font": "Figtree"},
+}
+
+# ==================== RECITERS ====================
+
+RECITERS = {
+    "alafasy": {
+        "id": "alafasy",
+        "name": "Mishary Rashid Alafasy",
+        "style": "Murattal",
+        "audio_base_url": "https://cdn.islamic.network/quran/audio/128/ar.alafasy"
+    },
+    "yasser_dossari": {
+        "id": "yasser_dossari", 
+        "name": "Yasser Al-Dossari",
+        "style": "Murattal",
+        "audio_base_url": "https://everyayah.com/data/Yasser_Ad-Dussary_128kbps"
+    },
+    "sudais": {
+        "id": "sudais",
+        "name": "Abdul Rahman Al-Sudais",
+        "style": "Murattal",
+        "audio_base_url": "https://cdn.islamic.network/quran/audio/128/ar.abdurrahmaansudais"
+    },
+    "minshawi": {
+        "id": "minshawi",
+        "name": "Mohamed Siddiq El-Minshawi",
+        "style": "Mujawwad",
+        "audio_base_url": "https://cdn.islamic.network/quran/audio/128/ar.minshawi"
+    },
+    "husary": {
+        "id": "husary",
+        "name": "Mahmoud Khalil Al-Husary",
+        "style": "Murattal",
+        "audio_base_url": "https://cdn.islamic.network/quran/audio/128/ar.husary"
+    }
+}
 
 # ==================== QURAN DATA CACHE ====================
 
@@ -87,10 +141,9 @@ async def load_quran_data():
     
     logger.info("Loading Quran data from API...")
     
-    async with httpx.AsyncClient(timeout=60.0) as client:
-        # Load surah list
+    async with httpx.AsyncClient(timeout=60.0) as http_client:
         try:
-            response = await client.get("https://api.alquran.cloud/v1/surah")
+            response = await http_client.get("https://api.alquran.cloud/v1/surah")
             if response.status_code == 200:
                 data = response.json()
                 if data.get("status") == "OK":
@@ -101,14 +154,21 @@ async def load_quran_data():
     
     QURAN_CACHE["loaded"] = True
 
-async def get_surah_verses(surah_number: int):
+async def get_surah_verses(surah_number: int, language: str = "en", reciter: str = "yasser_dossari"):
     """Fetch verses for a specific surah with translations"""
-    cache_key = f"surah_{surah_number}"
+    cache_key = f"surah_{surah_number}_{language}"
     
     # Check MongoDB cache first
     cached = await db.quran_cache.find_one({"key": cache_key}, {"_id": 0})
-    if cached:
+    if cached and cached.get("data"):
         return cached["data"]
+    
+    # Get translation ID
+    trans_info = SUPPORTED_TRANSLATIONS.get(language, SUPPORTED_TRANSLATIONS["en"])
+    trans_id = trans_info["id"]
+    
+    # Get reciter info
+    reciter_info = RECITERS.get(reciter, RECITERS["yasser_dossari"])
     
     async with httpx.AsyncClient(timeout=60.0) as http_client:
         try:
@@ -116,23 +176,33 @@ async def get_surah_verses(surah_number: int):
             ar_response = await http_client.get(f"https://api.alquran.cloud/v1/surah/{surah_number}")
             ar_data = ar_response.json() if ar_response.status_code == 200 else None
             
-            # Fetch English translation
-            en_response = await http_client.get(f"https://api.alquran.cloud/v1/surah/{surah_number}/en.asad")
-            en_data = en_response.json() if en_response.status_code == 200 else None
+            # Fetch translation
+            trans_response = await http_client.get(f"https://api.alquran.cloud/v1/surah/{surah_number}/{trans_id}")
+            trans_data = trans_response.json() if trans_response.status_code == 200 else None
             
             if ar_data and ar_data.get("status") == "OK":
                 verses = []
                 ar_ayahs = ar_data["data"]["ayahs"]
-                en_ayahs = en_data["data"]["ayahs"] if en_data and en_data.get("status") == "OK" else []
+                trans_ayahs = trans_data["data"]["ayahs"] if trans_data and trans_data.get("status") == "OK" else []
                 
                 for i, ar_ayah in enumerate(ar_ayahs):
+                    # Build audio URL based on reciter
+                    if reciter == "yasser_dossari":
+                        # Yasser Al-Dossari format: {surah:03d}{ayah:03d}.mp3
+                        audio_url = f"{reciter_info['audio_base_url']}/{surah_number:03d}{ar_ayah['numberInSurah']:03d}.mp3"
+                    else:
+                        # Islamic.network format
+                        audio_url = f"{reciter_info['audio_base_url']}/{ar_ayah['number']}.mp3"
+                    
                     verse = {
                         "surah": surah_number,
                         "ayah": ar_ayah["numberInSurah"],
+                        "ayah_global": ar_ayah["number"],
                         "arabic": ar_ayah["text"],
-                        "translation_en": en_ayahs[i]["text"] if i < len(en_ayahs) else None,
-                        "audio_url": f"https://cdn.islamic.network/quran/audio/128/ar.alafasy/{ar_ayah['number']}.mp3",
-                        "audio_word_url": f"https://audio.qurancdn.com/wbw/{surah_number}_{ar_ayah['numberInSurah']}.mp3"
+                        "translation": trans_ayahs[i]["text"] if i < len(trans_ayahs) else None,
+                        "translation_language": language,
+                        "audio_url": audio_url,
+                        "reciter": reciter_info["name"]
                     }
                     verses.append(verse)
                 
@@ -149,7 +219,103 @@ async def get_surah_verses(surah_number: int):
     
     return []
 
-# ==================== AI CHAT ====================
+# ==================== RAG / LIBRARY SYSTEM ====================
+
+# Simple in-memory vector store for library embeddings
+LIBRARY_EMBEDDINGS = []
+LIBRARY_CHUNKS = []
+
+# Sample library metadata (will be populated when PDFs are uploaded)
+LIBRARY_BOOKS = {
+    "mukashafatul_quloob": {
+        "title": "Mukashafatul Quloob",
+        "author": "Imam Al-Ghazali",
+        "topics": ["spiritual purification", "heart softening", "tazkiyah"],
+        "language": "ar"
+    },
+    "muntakhab_ahadees": {
+        "title": "Muntakhab Ahadees",
+        "author": "Maulana Yusuf Kandhalvi",
+        "topics": ["sahaba stories", "hadith", "kalimah", "salat", "ilm"],
+        "language": "ur_roman"
+    },
+    "shifa_shareef": {
+        "title": "Ash-Shifa",
+        "author": "Qadi Iyad",
+        "topics": ["seerah", "prophet rights", "prophet character"],
+        "language": "ur_roman"
+    }
+}
+
+def get_simple_embedding(text: str) -> List[float]:
+    """Generate a simple TF-IDF-like embedding for text (fallback when sentence-transformers not available)"""
+    # Simple word frequency based embedding
+    words = text.lower().split()
+    word_freq = {}
+    for word in words:
+        word_freq[word] = word_freq.get(word, 0) + 1
+    
+    # Create a fixed-size embedding
+    embedding = [0.0] * 384  # Match sentence-transformer dimension
+    for i, (word, freq) in enumerate(sorted(word_freq.items())[:384]):
+        embedding[i % 384] = freq / len(words)
+    
+    # Normalize
+    norm = np.linalg.norm(embedding)
+    if norm > 0:
+        embedding = [x / norm for x in embedding]
+    
+    return embedding
+
+async def search_library(query: str, top_k: int = 4) -> List[Dict]:
+    """Search library using cosine similarity"""
+    if not LIBRARY_CHUNKS:
+        return []
+    
+    query_embedding = get_simple_embedding(query)
+    
+    similarities = []
+    for i, chunk in enumerate(LIBRARY_CHUNKS):
+        if chunk.get("embedding"):
+            sim = cosine_similarity([query_embedding], [chunk["embedding"]])[0][0]
+            similarities.append((sim, chunk))
+    
+    # Sort by similarity
+    similarities.sort(key=lambda x: x[0], reverse=True)
+    
+    return [chunk for _, chunk in similarities[:top_k]]
+
+async def add_library_chunk(book_name: str, page_number: int, content: str):
+    """Add a chunk to the library with embedding"""
+    chunk = {
+        "id": str(uuid.uuid4()),
+        "book_name": book_name,
+        "page_number": page_number,
+        "content": content,
+        "embedding": get_simple_embedding(content)
+    }
+    LIBRARY_CHUNKS.append(chunk)
+    
+    # Also store in MongoDB for persistence
+    await db.library_chunks.insert_one({
+        "id": chunk["id"],
+        "book_name": book_name,
+        "page_number": page_number,
+        "content": content,
+        "embedding": chunk["embedding"],
+        "created_at": datetime.now(timezone.utc).isoformat()
+    })
+    
+    return chunk
+
+async def load_library_from_db():
+    """Load library chunks from MongoDB on startup"""
+    global LIBRARY_CHUNKS
+    chunks = await db.library_chunks.find({}, {"_id": 0}).to_list(10000)
+    LIBRARY_CHUNKS = chunks
+    logger.info(f"Loaded {len(LIBRARY_CHUNKS)} library chunks from database")
+
+# ==================== AI CHAT WITH RAG ====================
 
 SYSTEM_PROMPT = """You are Tilawa AI (تلاوة), a knowledgeable and respectful Islamic assistant specialized in Quranic studies. 
 
@@ -176,42 +342,62 @@ You can help with:
 - Comparing different translations
 - Answering questions about Islamic practices mentioned in the Quran"""
 
-async def stream_ai_response(message: str, session_id: str):
-    """Stream AI response using Emergent LLM"""
+SYSTEM_PROMPT_RAG = """You are Tilawa AI (تلاوة), a knowledgeable Islamic assistant with access to a curated library of Islamic literature.
+
+When answering questions, you MUST:
+1. Use the provided library context to give accurate, sourced answers
+2. Always cite your sources like: "As mentioned in Mukashafatul Quloob by Imam Ghazali..." or "In Muntakhab Ahadees, it is narrated that..."
+3. If the library context doesn't contain relevant information, say so and provide general Islamic guidance
+4. Be respectful and use proper Islamic etiquette
+
+Library Books Available:
+- Mukashafatul Quloob (Imam Ghazali): Spiritual purification and heart softening
+- Muntakhab Ahadees: Sahaba stories and core Hadith principles
+- Ash-Shifa (Qadi Iyad): Seerah and rights of Prophet Muhammad (PBUH)
+
+LIBRARY CONTEXT:
+{library_context}
+
+Now answer the user's question using the above context."""
+
+async def chat_with_rag(message: str, session_id: str, research_mode: bool = False, language: str = "en"):
+    """Chat with optional RAG from library"""
     from emergentintegrations.llm.chat import LlmChat, UserMessage
     
     api_key = os.environ.get('EMERGENT_LLM_KEY')
     if not api_key:
-        yield f"data: {json.dumps({'error': 'AI service not configured'})}\n\n"
-        return
+        return "AI service not configured"
     
-    # Get chat history from MongoDB
-    session = await db.chat_sessions.find_one({"id": session_id}, {"_id": 0})
-    history = session.get("messages", []) if session else []
+    # Build system prompt
+    if research_mode and LIBRARY_CHUNKS:
+        # Search library for relevant context
+        relevant_chunks = await search_library(message, top_k=4)
+        if relevant_chunks:
+            library_context = "\n\n".join([
+                f"[{chunk['book_name']}, Page {chunk['page_number']}]\n{chunk['content']}"
+                for chunk in relevant_chunks
+            ])
+            system_prompt = SYSTEM_PROMPT_RAG.format(library_context=library_context)
+        else:
+            system_prompt = SYSTEM_PROMPT
+    else:
+        system_prompt = SYSTEM_PROMPT
+    
+    # Add language instruction
+    if language != "en":
+        lang_name = SUPPORTED_TRANSLATIONS.get(language, {}).get("name", "English")
+        system_prompt += f"\n\nPlease respond in {lang_name} language when appropriate."
     
     # Initialize chat
     chat = LlmChat(
         api_key=api_key,
         session_id=session_id,
-        system_message=SYSTEM_PROMPT
+        system_message=system_prompt
     ).with_model("openai", "gpt-4o")
-    
-    # Add history to chat context
-    for msg in history[-10:]:  # Last 10 messages for context
-        if msg["role"] == "user":
-            chat.messages.append({"role": "user", "content": msg["content"]})
-        else:
-            chat.messages.append({"role": "assistant", "content": msg["content"]})
     
     try:
         user_msg = UserMessage(text=message)
-        full_response = ""
-        
-        # Stream the response
-        async for chunk in chat.send_message_stream(user_msg):
-            if chunk:
-                full_response += chunk
-                yield f"data: {json.dumps({'content': chunk, 'done': False})}\n\n"
+        response = await chat.send_message(user_msg)
         
         # Save to MongoDB
         await db.chat_sessions.update_one(
@@ -221,7 +407,7 @@ async def stream_ai_response(message: str, session_id: str):
                     "messages": {
                         "$each": [
                             {"role": "user", "content": message, "timestamp": datetime.now(timezone.utc).isoformat()},
-                            {"role": "assistant", "content": full_response, "timestamp": datetime.now(timezone.utc).isoformat()}
+                            {"role": "assistant", "content": response, "timestamp": datetime.now(timezone.utc).isoformat(), "research_mode": research_mode}
                         ]
                     }
                 },
@@ -231,49 +417,72 @@ async def stream_ai_response(message: str, session_id: str):
             upsert=True
         )
         
-        yield f"data: {json.dumps({'content': '', 'done': True})}\n\n"
-        
+        return response
     except Exception as e:
-        logger.error(f"AI chat error: {e}")
-        yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        logger.error(f"Chat error: {e}")
+        return f"I apologize, I encountered an error: {str(e)}"
 
 # ==================== API ROUTES ====================
 
 @api_router.get("/")
 async def root():
-    return {"message": "Tilawa API - Quranic Ecosystem", "version": "1.0.0"}
+    return {"message": "Tilawa API - Quranic Ecosystem with RAG", "version": "2.0.0"}
 
 @api_router.get("/health")
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now(timezone.utc).isoformat()}
 
+# Translations & Languages
+@api_router.get("/translations")
+async def get_translations():
+    """Get all supported translations"""
+    return SUPPORTED_TRANSLATIONS
+
+@api_router.get("/reciters")
+async def get_reciters():
+    """Get all supported reciters"""
+    return RECITERS
+
 # Surah Routes
-@api_router.get("/surahs", response_model=List[dict])
+@api_router.get("/surahs")
 async def get_surahs():
     """Get list of all 114 surahs"""
     await load_quran_data()
     return QURAN_CACHE["surahs"]
 
 @api_router.get("/surah/{surah_number}")
-async def get_surah(surah_number: int):
-    """Get surah info and verses"""
+async def get_surah(
+    surah_number: int, 
+    language: str = "en",
+    reciter: str = "yasser_dossari"
+):
+    """Get surah info and verses with translation"""
     if surah_number < 1 or surah_number > 114:
         raise HTTPException(status_code=400, detail="Surah number must be between 1 and 114")
     
     await load_quran_data()
     
     surah_info = next((s for s in QURAN_CACHE["surahs"] if s["number"] == surah_number), None)
-    verses = await get_surah_verses(surah_number)
+    verses = await get_surah_verses(surah_number, language, reciter)
+    
+    trans_info = SUPPORTED_TRANSLATIONS.get(language, SUPPORTED_TRANSLATIONS["en"])
     
     return {
         "info": surah_info,
-        "verses": verses
+        "verses": verses,
+        "translation": trans_info,
+        "reciter": RECITERS.get(reciter, RECITERS["yasser_dossari"])
     }
 
 @api_router.get("/verse/{surah_number}/{ayah_number}")
-async def get_verse(surah_number: int, ayah_number: int):
+async def get_verse(
+    surah_number: int, 
+    ayah_number: int,
+    language: str = "en",
+    reciter: str = "yasser_dossari"
+):
     """Get a specific verse with translations"""
-    verses = await get_surah_verses(surah_number)
+    verses = await get_surah_verses(surah_number, language, reciter)
     verse = next((v for v in verses if v["ayah"] == ayah_number), None)
     
     if not verse:
@@ -282,11 +491,13 @@ async def get_verse(surah_number: int, ayah_number: int):
     return verse
 
 @api_router.get("/search")
-async def search_quran(q: str = Query(..., min_length=2)):
+async def search_quran(q: str = Query(..., min_length=2), language: str = "en"):
     """Search Quran by text"""
+    trans_info = SUPPORTED_TRANSLATIONS.get(language, SUPPORTED_TRANSLATIONS["en"])
+    
     async with httpx.AsyncClient(timeout=30.0) as http_client:
         try:
-            response = await http_client.get(f"https://api.alquran.cloud/v1/search/{q}/all/en")
+            response = await http_client.get(f"https://api.alquran.cloud/v1/search/{q}/all/{trans_info['id']}")
             if response.status_code == 200:
                 data = response.json()
                 if data.get("status") == "OK":
@@ -297,64 +508,19 @@ async def search_quran(q: str = Query(..., min_length=2)):
     return {"count": 0, "matches": []}
 
 # AI Chat Routes
-@api_router.post("/chat/stream")
-async def chat_stream(request: ChatRequest):
-    """Stream AI chat response"""
-    session_id = request.session_id or str(uuid.uuid4())
-    
-    return StreamingResponse(
-        stream_ai_response(request.message, session_id),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Session-ID": session_id
-        }
-    )
-
 @api_router.post("/chat")
-async def chat_simple(request: ChatRequest):
-    """Non-streaming chat endpoint"""
-    from emergentintegrations.llm.chat import LlmChat, UserMessage
-    
-    api_key = os.environ.get('EMERGENT_LLM_KEY')
-    if not api_key:
-        raise HTTPException(status_code=500, detail="AI service not configured")
-    
+async def chat(request: ChatRequest):
+    """Chat with AI (supports research mode for RAG)"""
     session_id = request.session_id or str(uuid.uuid4())
     
-    chat = LlmChat(
-        api_key=api_key,
-        session_id=session_id,
-        system_message=SYSTEM_PROMPT
-    ).with_model("openai", "gpt-4o")
+    response = await chat_with_rag(
+        request.message, 
+        session_id, 
+        request.research_mode,
+        request.language
+    )
     
-    try:
-        user_msg = UserMessage(text=request.message)
-        response = await chat.send_message(user_msg)
-        
-        # Save to MongoDB
-        await db.chat_sessions.update_one(
-            {"id": session_id},
-            {
-                "$push": {
-                    "messages": {
-                        "$each": [
-                            {"role": "user", "content": request.message, "timestamp": datetime.now(timezone.utc).isoformat()},
-                            {"role": "assistant", "content": response, "timestamp": datetime.now(timezone.utc).isoformat()}
-                        ]
-                    }
-                },
-                "$set": {"updated_at": datetime.now(timezone.utc).isoformat()},
-                "$setOnInsert": {"id": session_id, "created_at": datetime.now(timezone.utc).isoformat()}
-            },
-            upsert=True
-        )
-        
-        return {"response": response, "session_id": session_id}
-    except Exception as e:
-        logger.error(f"Chat error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    return {"response": response, "session_id": session_id, "research_mode": request.research_mode}
 
 @api_router.get("/chat/history/{session_id}")
 async def get_chat_history(session_id: str):
@@ -363,6 +529,82 @@ async def get_chat_history(session_id: str):
     if not session:
         return {"messages": []}
     return {"messages": session.get("messages", [])}
+
+# Library Routes
+@api_router.get("/library/books")
+async def get_library_books():
+    """Get list of available library books"""
+    return LIBRARY_BOOKS
+
+@api_router.get("/library/chunks")
+async def get_library_chunks(book_name: Optional[str] = None, limit: int = 100):
+    """Get library chunks (optionally filtered by book)"""
+    if book_name:
+        chunks = [c for c in LIBRARY_CHUNKS if c.get("book_name") == book_name]
+    else:
+        chunks = LIBRARY_CHUNKS
+    
+    # Remove embeddings from response
+    return [
+        {k: v for k, v in chunk.items() if k != "embedding"}
+        for chunk in chunks[:limit]
+    ]
+
+@api_router.post("/library/search")
+async def search_library_endpoint(q: str = Query(..., min_length=2)):
+    """Search library using semantic search"""
+    results = await search_library(q, top_k=5)
+    return [
+        {k: v for k, v in chunk.items() if k != "embedding"}
+        for chunk in results
+    ]
+
+@api_router.post("/library/upload")
+async def upload_library_file(file: UploadFile = File(...), book_name: str = "unknown"):
+    """Upload a PDF or text file to the library"""
+    if not file.filename.endswith(('.pdf', '.txt')):
+        raise HTTPException(status_code=400, detail="Only PDF and TXT files are supported")
+    
+    content = await file.read()
+    
+    try:
+        if file.filename.endswith('.pdf'):
+            import pdfplumber
+            import io
+            
+            chunks_added = 0
+            with pdfplumber.open(io.BytesIO(content)) as pdf:
+                for page_num, page in enumerate(pdf.pages):
+                    text = page.extract_text()
+                    if text:
+                        # Chunk with 700 chars, 150 overlap
+                        chunk_size = 700
+                        overlap = 150
+                        for i in range(0, len(text), chunk_size - overlap):
+                            chunk_text = text[i:i + chunk_size]
+                            if len(chunk_text.strip()) > 50:
+                                await add_library_chunk(book_name, page_num + 1, chunk_text)
+                                chunks_added += 1
+            
+            return {"status": "success", "chunks_added": chunks_added, "book_name": book_name}
+        
+        else:  # .txt file
+            text = content.decode('utf-8')
+            chunk_size = 700
+            overlap = 150
+            chunks_added = 0
+            
+            for i in range(0, len(text), chunk_size - overlap):
+                chunk_text = text[i:i + chunk_size]
+                if len(chunk_text.strip()) > 50:
+                    await add_library_chunk(book_name, i // (chunk_size - overlap) + 1, chunk_text)
+                    chunks_added += 1
+            
+            return {"status": "success", "chunks_added": chunks_added, "book_name": book_name}
+    
+    except Exception as e:
+        logger.error(f"Error processing file: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Tajweed Lessons
 TAJWEED_LESSONS = [
@@ -455,8 +697,9 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def startup_event():
-    """Load Quran data on startup"""
+    """Load data on startup"""
     await load_quran_data()
+    await load_library_from_db()
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
