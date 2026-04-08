@@ -5,7 +5,9 @@ import api from "@/lib/api";
 export default function HadithLibrary() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCollection, setActiveCollection] = useState("bukhari");
+  const [activeBook, setActiveBook] = useState(null);
   const [collections, setCollections] = useState([]);
+  const [books, setBooks] = useState([]);
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
@@ -29,7 +31,7 @@ export default function HadithLibrary() {
     setLoading(true);
     setError("");
     try {
-      const res = await api.getHadiths({ collection: activeCollection, q, offset: nextOffset, limit });
+      const res = await api.getHadiths({ collection: activeCollection, q, book: activeBook ?? undefined, offset: nextOffset, limit });
       setItems(res.items || []);
       setTotal(res.total || 0);
       setOffset(res.offset || nextOffset);
@@ -47,6 +49,13 @@ export default function HadithLibrary() {
   }, []);
 
   useEffect(() => {
+    setActiveBook(null);
+    setBooks([]);
+    if (activeCollection === "bukhari") {
+      api.getBukhariBooks()
+        .then(d => setBooks(d.books || []))
+        .catch(() => {});
+    }
     fetchPage(0, searchQuery);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCollection]);
@@ -57,6 +66,11 @@ export default function HadithLibrary() {
     return () => debounceRef.current && clearTimeout(debounceRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
+
+  useEffect(() => {
+    fetchPage(0, searchQuery);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeBook]);
 
   return (
     <div data-testid="hadith-library" className="max-w-5xl mx-auto px-4 sm:px-8 py-12 pb-32">
@@ -144,6 +158,35 @@ export default function HadithLibrary() {
             </button>
           </div>
         </div>
+
+        {/* Book filter (matches your Library tab pattern) */}
+        {books.length ? (
+          <div className="flex flex-wrap items-center gap-2 mb-5">
+            <button
+              onClick={() => setActiveBook(null)}
+              className={`text-[12px] px-3 py-1.5 rounded-full border transition-colors ${
+                activeBook == null ? "bg-[#E6C364] text-[#111] border-[#E6C364]" : "bg-[#1a1a22] text-[#9a9a9a] border-[#E6C364]/15 hover:border-[#E6C364]/35 hover:text-[#E6C364]"
+              }`}
+            >
+              All Books
+            </button>
+            {books.slice(0, 12).map(b => (
+              <button
+                key={b.book}
+                onClick={() => setActiveBook(b.book)}
+                className={`text-[12px] px-3 py-1.5 rounded-full border transition-colors ${
+                  activeBook === b.book ? "bg-[#E6C364] text-[#111] border-[#E6C364]" : "bg-[#1a1a22] text-[#9a9a9a] border-[#E6C364]/15 hover:border-[#E6C364]/35 hover:text-[#E6C364]"
+                }`}
+                title={b.name}
+              >
+                {b.name}
+              </button>
+            ))}
+            {books.length > 12 ? (
+              <span className="text-[11px] text-[#666] ml-1">+{books.length - 12} more (coming next)</span>
+            ) : null}
+          </div>
+        ) : null}
 
         {error ? (
           <div className="bg-[#1a1a22] border border-red-500/30 p-4 text-sm text-red-300">{error}</div>
