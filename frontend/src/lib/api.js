@@ -27,6 +27,11 @@ const api = {
   getDashboardStats: () => http.get("/dashboard/stats").then(r => r.data),
   getQuizQuestions: (limit = 8) => http.get("/quiz/questions", { params: { limit } }).then(r => r.data),
   submitQuiz: (answers) => http.post("/quiz/submit", { answers }).then(r => r.data),
+  getHadithCollections: () => http.get("/hadith/collections").then(r => r.data),
+  getBukhariBooks: () => http.get("/hadith/bukhari/books").then(r => r.data),
+  getHadiths: ({ collection = "bukhari", q = "", book = undefined, offset = 0, limit = 20 } = {}) =>
+    http.get("/hadiths", { params: { collection, q, book, offset, limit } }).then(r => r.data),
+  getHadith: (collection, hadithnumber) => http.get(`/hadiths/${collection}/${hadithnumber}`).then(r => r.data),
 };
 
 export default api;

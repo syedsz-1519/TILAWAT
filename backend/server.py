@@ -7,14 +7,17 @@ import logging
 import uuid
 import random
 import asyncio
+import json
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime, timezone
 import httpx
+from functools import lru_cache
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+DATA_DIR = ROOT_DIR / "data"
 
 class MockCursor:
     def __init__(self, list_items):
@@ -62,6 +65,23 @@ api = APIRouter(prefix="/api")
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
+
+@lru_cache(maxsize=1)
+def load_sahih_bukhari():
+    path = DATA_DIR / "sahih_bukhari.json"
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+def _normalize_query(s: str) -> str:
+    return " ".join((s or "").lower().split())
+
+def _bukhari_section_name(book_no: int) -> str:
+    try:
+        meta = load_sahih_bukhari().get("metadata", {})
+        sections = meta.get("sections", {})
+        return sections.get(str(book_no), "")
+    except Exception:
+        return ""
 
 
 # ── Pydantic Models ──
@@ -622,6 +642,118 @@ async def get_supported_translations():
         "kashmiri": 740,
         "english": 20
     }
+
+# ── Hadith Library (Local JSON) ──
+@api.get("/hadith/collections")
+async def hadith_collections():
+    bukhari = load_sahih_bukhari()
+    hadiths = bukhari.get("hadiths", []) or []
+    sections = bukhari.get("metadata", {}).get("sections", {}) or {}
+    return {
+        "collections": [
+            {
+                "id": "bukhari",
+                "title": "Sahih al-Bukhari",
+                "description": "The most authentic compilation of prophetic traditions.",
+                "hadith_count": len(hadiths),
+                "book_count": max((int(k) for k in sections.keys() if str(k).isdigit()), default=0),
+            }
+        ]
+    }
+
+@api.get("/hadith/bukhari/books")
+async def bukhari_books():
+    bukhari = load_sahih_bukhari()
+    sections = bukhari.get("metadata", {}).get("sections", {}) or {}
+    books = []
+    for k, v in sections.items():
+        if not str(k).isdigit():
+            continue
+        bn = int(k)
+        name = str(v or "").strip()
+        if bn <= 0:
+            continue
+        books.append({"book": bn, "name": name or f"Book {bn}"})
+    books.sort(key=lambda x: x["book"])
+    return {"books": books, "total": len(books)}
+
+@api.get("/hadiths")
+async def list_hadiths(
+    collection: str = "bukhari",
+    q: str = "",
+    book: Optional[int] = None,
+    offset: int = 0,
+    limit: int = 20,
+):
+    if collection != "bukhari":
+        raise HTTPException(400, "Unsupported collection")
+
+    data = load_sahih_bukhari()
+    all_hadiths = data.get("hadiths", []) or []
+
+    limit = max(1, min(int(limit), 50))
+    offset = max(0, int(offset))
+
+    nq = _normalize_query(q)
+    filtered = all_hadiths
+
+    if book is not None:
+        try:
+            book_no = int(book)
+        except Exception:
+            raise HTTPException(400, "Invalid book")
+        filtered = [h for h in filtered if (h.get("reference") or {}).get("book") == book_no]
+
+    if nq:
+        def _matches(h):
+            t = _normalize_query(h.get("text", ""))
+            return nq in t
+        filtered = [h for h in filtered if _matches(h)]
+
+    total = len(filtered)
+    page = filtered[offset: offset + limit]
+
+    items = []
+    for h in page:
+        ref = h.get("reference") or {}
+        book_no = ref.get("book")
+        items.append(
+            {
+                "collection": "bukhari",
+                "hadithnumber": h.get("hadithnumber"),
+                "arabicnumber": h.get("arabicnumber"),
+                "text": h.get("text", ""),
+                "reference": ref,
+                "book_name": _bukhari_section_name(book_no) if isinstance(book_no, int) else "",
+            }
+        )
+
+    return {"items": items, "total": total, "offset": offset, "limit": limit}
+
+@api.get("/hadiths/{collection}/{hadithnumber}")
+async def get_hadith(collection: str, hadithnumber: int):
+    if collection != "bukhari":
+        raise HTTPException(400, "Unsupported collection")
+    try:
+        hn = int(hadithnumber)
+    except Exception:
+        raise HTTPException(400, "Invalid hadithnumber")
+
+    data = load_sahih_bukhari()
+    for h in data.get("hadiths", []) or []:
+        if h.get("hadithnumber") == hn:
+            ref = h.get("reference") or {}
+            book_no = ref.get("book")
+            return {
+                "collection": "bukhari",
+                "hadithnumber": h.get("hadithnumber"),
+                "arabicnumber": h.get("arabicnumber"),
+                "text": h.get("text", ""),
+                "grades": h.get("grades", []) or [],
+                "reference": ref,
+                "book_name": _bukhari_section_name(book_no) if isinstance(book_no, int) else "",
+            }
+    raise HTTPException(404, "Hadith not found")
 
 # ══════════════════════════════════════════
 #  APP SETUP
