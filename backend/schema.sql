@@ -121,3 +121,30 @@ CREATE TABLE users (
     last_active_at      TIMESTAMPTZ,
     is_active           BOOLEAN         NOT NULL DEFAULT TRUE
 );
+
+-- ──────────────────────────────────────────────────────────
+--  AI AGENT & CONVERSATION LOGS
+-- ──────────────────────────────────────────────────────────
+
+CREATE TABLE chat_history (
+    id                  SERIAL          PRIMARY KEY,
+    interaction_id      UUID            NOT NULL UNIQUE DEFAULT uuid_generate_v4(),
+    user_id             UUID            REFERENCES users(id) ON DELETE SET NULL, -- Nullable for local testing
+    user_query          TEXT            NOT NULL,
+    agent_response      TEXT            NOT NULL,
+    engine              VARCHAR(50)     NOT NULL DEFAULT 'Ollama_Llama3_Local',
+    timestamp           TIMESTAMPTZ     NOT NULL DEFAULT NOW()
+);
+
+-- Index for searching chat records fast
+CREATE INDEX idx_chat_history_time ON chat_history(timestamp DESC);
+
+CREATE TABLE verse_generations (
+    id                  SERIAL          PRIMARY KEY,
+    user_prompt         TEXT            NOT NULL,
+    arabic_text         TEXT            NOT NULL,
+    translation_text    TEXT            NOT NULL,
+    reference_id        VARCHAR(100)    NOT NULL,
+    generated_by        VARCHAR(50)     NOT NULL DEFAULT 'Gemini_1.5_Pro',
+    created_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW()
+);

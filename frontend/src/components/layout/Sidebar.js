@@ -16,11 +16,28 @@ export default function Sidebar({ isOpen, onToggle }) {
   const [surahs, setSurahs] = useState([]);
   const [filter, setFilter] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
   const activeSurahId = (() => { const m = location.pathname.match(/\/mushaf\/(\d+)/); return m ? parseInt(m[1]) : null; })();
 
-  useEffect(() => { api.getSurahs().then(d => { setSurahs(d.surahs || []); setLoading(false); }).catch(() => setLoading(false)); }, []);
+  useEffect(() => {
+    setLoading(true);
+    setLoadError("");
+    api.getSurahs()
+      .then(d => {
+        const list = d?.surahs || [];
+        setSurahs(list);
+        if (!Array.isArray(list) || list.length === 0) {
+          setLoadError("No surahs returned from API.");
+        }
+        setLoading(false);
+      })
+      .catch((e) => {
+        setLoadError(e?.message || "Failed to load surahs.");
+        setLoading(false);
+      });
+  }, []);
 
   const filtered = surahs.filter(s =>
     s.name_simple?.toLowerCase().includes(filter.toLowerCase()) || s.name_arabic?.includes(filter) || String(s.id) === filter
@@ -55,7 +72,7 @@ export default function Sidebar({ isOpen, onToggle }) {
         <ScrollArea className="flex-1">
           <div data-testid="surah-list">
             {loading ? Array.from({ length: 10 }).map((_, i) => (<div key={i} className="p-4 border-b border-[#E6C364]/5"><div className="skeleton h-4 w-32 mb-2" /><div className="skeleton h-3 w-20" /></div>))
-            : filtered.map(surah => (
+            : (filtered.length ? filtered.map(surah => (
               <div key={surah.id} data-testid={`surah-item-${surah.id}`}
                 className={`flex items-center justify-between px-4 py-3 cursor-pointer border-b border-[#E6C364]/5 transition-all duration-200 group ${
                   surah.id === activeSurahId ? "text-[#E6C364] bg-[#E6C364]/8 border-l-2 border-l-[#E6C364]" : "text-[#9a9a9a] hover:text-[#E6C364] hover:bg-[#E6C364]/5"
@@ -70,6 +87,19 @@ export default function Sidebar({ isOpen, onToggle }) {
                   </div>
                 </div>
                 <span className="arabic-text text-lg leading-none shrink-0">{surah.name_arabic}</span>
+              </div>
+            )) : (
+              <div className="px-4 py-3 text-sm text-[#9a9a9a]">
+                {loadError ? (
+                  <div className="text-red-300">
+                    {loadError}
+                    <div className="text-[11px] text-[#666] mt-1">
+                      Tip: open `http://localhost:3000/api/surahs` in browser to confirm proxy.
+                    </div>
+                  </div>
+                ) : (
+                  <div>No matches.</div>
+                )}
               </div>
             ))}
           </div>

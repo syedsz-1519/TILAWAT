@@ -56,36 +56,46 @@ export default function TajweedHub() {
         </p>
       </div>
 
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-10">
+      {/* Luxurious 3D Quick Actions */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-12 relative">
+        <div className="absolute inset-0 bg-[#E6C364]/5 blur-[100px] pointer-events-none"></div>
         <button data-testid="tajweed-quiz-btn" onClick={() => navigate("/tajweed/quiz")}
-          className="bg-[#1a1a22] border border-[#E6C364]/15 p-5 flex items-center gap-3 hover:border-[#E6C364]/30 transition-all group">
-          <div className="w-10 h-10 flex items-center justify-center bg-[#9B59B6]/10 border border-[#9B59B6]/30 rounded-full shrink-0">
-            <Award size={16} className="text-[#9B59B6]" />
-          </div>
-          <div className="text-left">
-            <p className="text-sm text-[#E5E2E1] group-hover:text-[#E6C364] transition-colors">Take Quiz</p>
-            <p className="text-[10px] text-[#9a9a9a]">Test your knowledge</p>
+          className="relative group overflow-hidden bg-[#0A0A0F]/80 backdrop-blur-xl border border-white/10 p-6 rounded-2xl hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(155,89,182,0.3)] transition-all duration-500">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#9B59B6]/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-[#9B59B6]/20 to-transparent border border-[#9B59B6]/30 rounded-xl group-hover:border-[#9B59B6]/60 transition-colors">
+              <Award size={20} className="text-[#9B59B6]" />
+            </div>
+            <div className="text-left">
+              <p className="text-base font-medium text-white group-hover:text-[#9B59B6] transition-colors">Take Quiz</p>
+              <p className="text-[11px] text-[#9a9a9a] uppercase tracking-wider mt-1">Test Knowledge</p>
+            </div>
           </div>
         </button>
         <button data-testid="tajweed-dashboard-btn" onClick={() => navigate("/dashboard")}
-          className="bg-[#1a1a22] border border-[#E6C364]/15 p-5 flex items-center gap-3 hover:border-[#E6C364]/30 transition-all group">
-          <div className="w-10 h-10 flex items-center justify-center bg-[#2ECC71]/10 border border-[#2ECC71]/30 rounded-full shrink-0">
-            <BookOpen size={16} className="text-[#2ECC71]" />
-          </div>
-          <div className="text-left">
-            <p className="text-sm text-[#E5E2E1] group-hover:text-[#E6C364] transition-colors">Dashboard</p>
-            <p className="text-[10px] text-[#9a9a9a]">Track your progress</p>
+          className="relative group overflow-hidden bg-[#0A0A0F]/80 backdrop-blur-xl border border-white/10 p-6 rounded-2xl hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(46,204,113,0.3)] transition-all duration-500">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#2ECC71]/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-[#2ECC71]/20 to-transparent border border-[#2ECC71]/30 rounded-xl group-hover:border-[#2ECC71]/60 transition-colors">
+              <BookOpen size={20} className="text-[#2ECC71]" />
+            </div>
+            <div className="text-left">
+              <p className="text-base font-medium text-white group-hover:text-[#2ECC71] transition-colors">Dashboard</p>
+              <p className="text-[11px] text-[#9a9a9a] uppercase tracking-wider mt-1">Track Progress</p>
+            </div>
           </div>
         </button>
         <button data-testid="tajweed-practice-btn" onClick={() => document.getElementById("practice-section")?.scrollIntoView({ behavior: "smooth" })}
-          className="bg-[#1a1a22] border border-[#E6C364]/15 p-5 flex items-center gap-3 hover:border-[#E6C364]/30 transition-all group">
-          <div className="w-10 h-10 flex items-center justify-center bg-[#E6C364]/10 border border-[#E6C364]/30 rounded-full shrink-0">
-            <Mic size={16} className="text-[#E6C364]" />
-          </div>
-          <div className="text-left">
-            <p className="text-sm text-[#E5E2E1] group-hover:text-[#E6C364] transition-colors">Practice</p>
-            <p className="text-[10px] text-[#9a9a9a]">Record a verse</p>
+          className="relative group overflow-hidden bg-[#0A0A0F]/80 backdrop-blur-xl border border-white/10 p-6 rounded-2xl hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(230,195,100,0.3)] transition-all duration-500">
+          <div className="absolute inset-0 bg-gradient-to-br from-[#E6C364]/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="w-12 h-12 flex items-center justify-center bg-gradient-to-br from-[#E6C364]/20 to-transparent border border-[#E6C364]/30 rounded-xl group-hover:border-[#E6C364]/60 transition-colors">
+              <Mic size={20} className="text-[#E6C364]" />
+            </div>
+            <div className="text-left">
+              <p className="text-base font-medium text-white group-hover:text-[#E6C364] transition-colors">Practice</p>
+              <p className="text-[11px] text-[#9a9a9a] uppercase tracking-wider mt-1">Record a Verse</p>
+            </div>
           </div>
         </button>
       </div>

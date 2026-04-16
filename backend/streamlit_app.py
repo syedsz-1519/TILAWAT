@@ -46,7 +46,8 @@ elif page == "Surahs":
                 for verse in verses_data["verses"]:
                     st.markdown(f"**{verse['verse_key']}**")
                     st.write(f"<h3 style='text-align: right; font-family: sans-serif;' dir='rtl'>{verse['text_uthmani']}</h3>", unsafe_allow_html=True)
-                    st.write(f"*{verse['translation_en']}*")
+                    translation = verse.get('translations', [{}])[0].get('text', '') if verse.get('translations') else ''
+                    st.write(f"*{translation}*")
                     st.markdown("---")
 
 elif page == "Tajweed Rules":

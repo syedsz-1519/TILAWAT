@@ -57,6 +57,7 @@ export function AudioProvider({ children }) {
       audio.removeEventListener("pause", onPause);
       cancelAnimationFrame(animRef.current);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Word sync loop

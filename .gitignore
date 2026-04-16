@@ -79,15 +79,17 @@ agenthub/agents/youtube/db
 memory/test_credentials.md
 
 # Mobile development
-android-sdk/-e 
-# Environment files
+android-sdk/
+
+# Environment files — NEVER commit secrets
 *.env
 *.env.*
--e 
-# Environment files
-*.env
-*.env.*
--e 
-# Environment files
-*.env
-*.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Diagnostic/test files
+diag_result.txt
+test_import.py
+

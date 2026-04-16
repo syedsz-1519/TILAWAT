@@ -13,11 +13,16 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import datetime, timezone
 import httpx
+import re
 from functools import lru_cache
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 DATA_DIR = ROOT_DIR / "data"
+
+# Logger MUST be initialized before MongoDB class uses it
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 class MockCursor:
     def __init__(self, list_items):
@@ -47,28 +52,69 @@ class MockCollection:
     async def distinct(self, key): return list(set(i.get(key) for i in self.data if key in i))
     async def create_index(self, *args, **kwargs): pass
 
-class MockDB:
+# Safe DB Initialization: Use MockCollection for local dev, real Motor for cloud
+class MongoDB:
     def __init__(self):
+        url = os.getenv("MONGO_URL", "mongodb://localhost:27017")
+        db_name = os.getenv("DB_NAME", "tilawa_db")
+        use_real_db = "mongodb+srv" in url or "mongo.net" in url  # Cloud Atlas URLs
+
+        if use_real_db:
+            try:
+                self.client = AsyncIOMotorClient(url, serverSelectionTimeoutMS=3000)
+                self.db = self.client[db_name]
+                self.surahs = self.db.surahs
+                self.verses = self.db.verses
+                self.audio_timings = self.db.audio_timings
+                self.bookmarks = self.db.bookmarks
+                self.tajweed_sessions = self.db.tajweed_sessions
+                self.chat_history = self.db.chat_history
+                logger.info(f"🟢 Connected to cloud MongoDB: {db_name}")
+            except Exception as e:
+                logger.warning(f"🔴 Cloud MongoDB failed, using in-memory mock: {e}")
+                self._use_mock()
+        else:
+            logger.info("📦 Using in-memory MockDB (no cloud MONGO_URL set)")
+            self._use_mock()
+
+    def _use_mock(self):
         self.surahs = MockCollection()
         self.verses = MockCollection()
         self.audio_timings = MockCollection()
         self.bookmarks = MockCollection()
         self.tajweed_sessions = MockCollection()
+        self.chat_history = MockCollection()
 
-db = MockDB()
+db = MongoDB()
 
 QURAN_API = "https://api.quran.com/api/v4"
 QDC_API = "https://api.qurancdn.com/api/qdc"
 
-app = FastAPI(title="TILAWA API")
-api = APIRouter(prefix="/api")
+# Safe import: don't let ML model downloads freeze the server
+try:
+    from local_offline_agent import router as offline_router
+except Exception as e:
+    logger.warning(f"Offline agent disabled (missing deps): {e}")
+    offline_router = APIRouter()  # Empty fallback router
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
+app = FastAPI(title="TILAWA API")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.include_router(offline_router, prefix="/api/offline")
+
+api = APIRouter(prefix="/api")
 
 @lru_cache(maxsize=1)
 def load_sahih_bukhari():
     path = DATA_DIR / "sahih_bukhari.json"
+    if not path.exists():
+        return {"metadata": {"sections": {}}, "hadiths": []}
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -182,7 +228,6 @@ async def get_cached_verses(surah_id: int, translations: str = "20"):
 
                 translations_arr = v.get("translations", [])
                 translated_texts = []
-                import re
                 for tr in translations_arr:
                     translated_texts.append({
                         "id": tr.get("resource_id"),
@@ -312,7 +357,7 @@ async def get_audio_timings(surah_id: int, reciter_id: int = 7):
 @api.get("/reciters")
 async def get_reciters():
     reciters = [
-        {"id": 7, "name": "Mishari Rashid Al-Afasy", "style": "Murattal"},
+        {"id": 7, "name": "Yasser Al-Dosari", "style": "Murattal"},
         {"id": 2, "name": "Abdul Rahman Al-Sudais", "style": "Murattal"},
         {"id": 1, "name": "Abdul Basit Abdul Samad", "style": "Murattal"},
         {"id": 5, "name": "Hani Ar-Rifai", "style": "Murattal"},
@@ -324,6 +369,99 @@ async def get_reciters():
     return {"reciters": reciters}
 
 
+def _strip_html(s: str) -> str:
+    return re.sub(r"<[^>]+>", "", s or "")
+
+
+def _verse_search_blob(v: dict) -> str:
+    parts = [v.get("text_uthmani") or "", v.get("text_imlaei") or ""]
+    for tr in v.get("translations") or []:
+        parts.append(_strip_html(tr.get("text", "")))
+    return " ".join(parts).lower()
+
+
+def _search_local_verses(q: str, limit: int) -> List[dict]:
+    """Real substring search on in-memory verse cache (MockDB ignores Mongo $regex)."""
+    qn = q.strip().lower()
+    if not qn:
+        return []
+    out: List[dict] = []
+    # Safely access .data only if using MockCollection
+    local_data = getattr(db.verses, 'data', None)
+    if local_data is None:
+        return []  # Real Motor client — skip local search, rely on API
+    for v in local_data:
+        if qn in _verse_search_blob(v):
+            trs = v.get("translations") or []
+            en = _strip_html(trs[0].get("text", "")) if trs else ""
+            out.append({
+                "verse_key": v.get("verse_key", ""),
+                "text_uthmani": v.get("text_uthmani", ""),
+                "translation_en": en,
+            })
+            if len(out) >= limit:
+                break
+    return out
+
+
+async def _search_by_surah_names(q: str, remaining: int) -> List[dict]:
+    """Match surah names (e.g. 'fat' → Al-Fatihah) and return first verses."""
+    qn = q.strip().lower()
+    if len(qn) < 2 or remaining <= 0:
+        return []
+    surahs = await get_cached_surahs()
+    hits = []
+    for s in surahs:
+        name_s = (s.get("name_simple") or "").lower()
+        trans = ((s.get("translated_name") or {}).get("name") or "").lower()
+        arabic = s.get("name_arabic") or ""
+        if qn in name_s or qn in trans or (q.strip() and q.strip() in arabic):
+            hits.append(s)
+        if len(hits) >= 8:
+            break
+    out: List[dict] = []
+    for s in hits:
+        sid = s.get("id")
+        if not sid:
+            continue
+        row = await _fetch_first_verse_summary(int(sid))
+        if row:
+            out.append(row)
+        if len(out) >= remaining:
+            break
+    return out
+
+
+async def _fetch_first_verse_summary(surah_id: int) -> Optional[dict]:
+    """One HTTP round-trip: first ayah of a surah (avoid loading full chapter into cache)."""
+    try:
+        data = await fetch_from_quran_api(
+            f"/verses/by_chapter/{surah_id}",
+            {
+                "language": "en",
+                "words": "false",
+                "translations": "20",
+                "fields": "text_uthmani,text_imlaei",
+                "per_page": 1,
+                "page": 1,
+            },
+        )
+        raw = (data.get("verses") or [])[:1]
+        if not raw:
+            return None
+        v = raw[0]
+        trs = v.get("translations") or []
+        en = _strip_html(trs[0].get("text", "")) if trs else ""
+        return {
+            "verse_key": v.get("verse_key", ""),
+            "text_uthmani": v.get("text_uthmani", ""),
+            "translation_en": en,
+        }
+    except Exception as e:
+        logger.error(f"First-verse fetch failed for surah {surah_id}: {e}")
+        return None
+
+
 # ── Search ──
 @api.get("/search")
 async def search_verses(
@@ -331,40 +469,48 @@ async def search_verses(
     language: str = "en",
     limit: int = 20,
 ):
-    # Search cached verses in MongoDB
-    results = await db.verses.find(
-        {"$or": [
-            {"text_uthmani": {"$regex": q, "$options": "i"}},
-            {"text_imlaei": {"$regex": q, "$options": "i"}},
-            {"translation_en": {"$regex": q, "$options": "i"}},
-        ]},
-        {"_id": 0}
-    ).limit(limit).to_list(limit)
+    limit = max(1, min(int(limit), 50))
+    merged: List[dict] = []
+    seen: set = set()
 
-    if results:
-        return {"results": results, "total": len(results), "query": q, "source": "cache"}
+    def _add(rows: List[dict]) -> None:
+        for r in rows:
+            k = r.get("verse_key")
+            if not k or k in seen:
+                continue
+            seen.add(k)
+            merged.append(r)
+            if len(merged) >= limit:
+                return
 
-    # Fallback: Quran.com search API
-    try:
-        data = await fetch_from_quran_api("/search", {"q": q, "language": language, "size": limit})
-        search_data = data.get("search", {})
-        api_results = []
-        for r in search_data.get("results", []):
-            translations = r.get("translations", [])
-            import re
-            translation_text = ""
-            if translations:
-                translation_text = re.sub(r'<[^>]+>', '', translations[0].get("text", ""))
-            api_results.append({
-                "verse_key": r.get("verse_key", ""),
-                "text_uthmani": r.get("text", ""),
-                "translation_en": translation_text,
-                "highlighted": r.get("highlighted", ""),
-            })
-        return {"results": api_results, "total": len(api_results), "query": q, "source": "api"}
-    except Exception as e:
-        logger.error(f"Search API error: {e}")
-    return {"results": [], "total": 0, "query": q, "source": "none"}
+    _add(_search_local_verses(q, limit))
+
+    if len(merged) < limit:
+        _add(await _search_by_surah_names(q, limit - len(merged)))
+
+    if len(merged) < limit:
+        try:
+            data = await fetch_from_quran_api(
+                "/search", {"q": q, "language": language, "size": limit - len(merged)}
+            )
+            search_data = data.get("search", {})
+            api_results: List[dict] = []
+            for r in search_data.get("results", []):
+                translations = r.get("translations", [])
+                translation_text = ""
+                if translations:
+                    translation_text = _strip_html(translations[0].get("text", ""))
+                api_results.append({
+                    "verse_key": r.get("verse_key", ""),
+                    "text_uthmani": r.get("text", ""),
+                    "translation_en": translation_text,
+                    "highlighted": r.get("highlighted", ""),
+                })
+            _add(api_results)
+        except Exception as e:
+            logger.error(f"Search API error: {e}")
+
+    return {"results": merged, "total": len(merged), "query": q, "source": "mixed"}
 
 
 # ── Bookmarks ──
@@ -760,13 +906,25 @@ async def get_hadith(collection: str, hadithnumber: int):
 # ══════════════════════════════════════════
 app.include_router(api)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=os.environ.get('CORS_ORIGINS', '*').split(','),
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+import os
+
+# Mount the React Frontend to run exactly on the same port as this Python server (Port 8000)!
+frontend_dir = ROOT_DIR.parent / "frontend" / "build"
+
+@app.exception_handler(404)
+async def spa_fallback(request, exc):
+    # If the user asks for a missing API route, return normal 404
+    if request.url.path.startswith("/api/"):
+        from fastapi.responses import JSONResponse
+        return JSONResponse({"detail": "Not Found"}, status_code=404)
+    # SPA routing: give React index.html for everything else!
+    return FileResponse(frontend_dir / "index.html")
+
+if frontend_dir.exists():
+    app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
+
 
 @app.on_event("startup")
 async def startup():

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TILAWA Design System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:ital,wght@0,400;0,700;1,400;1,700&family=DM+Mono&family=Inter:wght@400..700&family=Lateef&family=Noto+Kufi+Arabic:wght@400..900&family=Noto+Naskh+Arabic:wght@400..700&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Reem+Kufi:wght@400..700&family=Scheherazade+New:wght@400..700&display=swap" rel="stylesheet">
+<style>
+/* ==========================================================================
+   CSS CUSTOM PROPERTIES (THEMES)
+   ========================================================================== */
+:root {
+  /* DARK THEME (Default) */
+  --bg-color: #0A0E14;
+  --surface: #111820;
+  --surface-2: #192130;
+  --verse-bg: #0D1A10;
+  --arabic-text: #F0ECD8;
+  --gold: #C9A84C;
+  --gold-light: #E8C96A;
+  --green: #1A6B4A;
+  --border-gold: rgba(201, 168, 76, 0.2);
+  --border-green: rgba(26, 107, 74, 0.2);
+  
+  /* Text */
+  --heading: #F5F1E8;
+  --body: #9AAABB;
+  --caption: #5A6A7A;
+  
+  /* Tajweed Colors */
+  --tajweed-ikhfa: #27AE60;
+  --tajweed-idgham: #3498DB;
+  --tajweed-ghunnah: #F39C12;
+  --tajweed-qalqalah: #E74C3C;
+  --tajweed-madd: #9B59B6;
+}
+
+[data-theme="parchment"] {
+  --bg-color: #F5EDD6;
+  --surface: #EDE0C0;
+  --surface-2: #E5D6AE;
+  --arabic-text: #2C1810;
+  --gold: #8B6914;
+  --gold-light: #A8811A;
+  --green: #1A5C3A;
+  --border-gold: rgba(139, 105, 20, 0.3);
+  --border-green: rgba(26, 92, 58, 0.3);
+  --heading: #2C1810;
+  --body: #5A3E2B;
+  --caption: #8B6914;
+}
+
+[data-theme="night"] {
+  --bg-color: #050810;
+  --surface: #0a0e15;
+  --arabic-text: #D4C898;
+  --gold: #B8942E;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background-color: #1a1a24;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  padding: 40px;
+}
+
+h1.page-title { text-align: center; font-size: 3rem; font-family: 'Plus Jakarta Sans'; margin-bottom: 50px; color: #fff; }
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 60px;
+  justify-content: center;
+}
+
+/* Base Device Frame */
+.device {
+  background-color: var(--bg-color);
+  color: var(--heading);
+  border: 1px solid #333;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+  position: relative;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+
+/* ==========================================================================
+   TYPOGRAPHY CLASSES
+   ========================================================================== */
+.ar-display-lg { font-family: 'Amiri', serif; font-size: 48px; line-height: 2.5; font-feature-settings: "liga" 1, "calt" 1; direction: rtl; }
+.ar-display-md { font-family: 'Amiri', serif; font-size: 32px; line-height: 2.3; font-feature-settings: "liga" 1, "calt" 1; direction: rtl; }
+.ar-display-sm { font-family: 'Amiri', serif; font-size: 24px; line-height: 2.2; font-feature-settings: "liga" 1, "calt" 1; direction: rtl; }
+.ar-title { font-family: 'Noto Kufi Arabic', sans-serif; font-size: 20px; line-height: 1.6; direction: rtl; }
+.ar-subtitle { font-family: 'Noto Naskh Arabic', serif; font-size: 16px; line-height: 1.8; direction: rtl; }
+.ar-body { font-family: 'Scheherazade New', serif; font-size: 14px; line-height: 2.0; direction: rtl; }
+
+/* SVG Backgrounds */
+.bg-starfield {
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='80' height='80' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M50 0L55 45L100 50L55 55L50 100L45 55L0 50L45 45Z' fill='none' stroke='%23C9A84C' stroke-opacity='0.05'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+/* ==========================================================================
+   TEMPLATE 1: MUSHAF READING SCREEN
+   ========================================================================== */
+.t1-mushaf {
+  width: 390px; height: 844px;
+}
+.t1-glow {
+  position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%);
+  width: 300px; height: 300px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(26,107,74,0.08) 0%, transparent 70%);
+  pointer-events: none;
+}
+.t1-content { position: relative; z-index: 10; padding: 20px; height: 100%; overflow-y: auto; }
+.bismillah-block { text-align: center; margin: 24px 0 16px 0; }
+.bismillah-text { color: var(--gold); }
+.gold-divider-container { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 8px;}
+.gold-line { height: 0.5px; background: var(--gold); width: 60px; opacity: 0.6; }
+.star-icon { width: 16px; height: 16px; stroke: var(--gold); fill: none; }
+
+.verse-block { padding: 16px 0; position: relative; }
+.verse-arabic {
+  color: var(--arabic-text);
+  text-align: right; word-spacing: 4px;
+}
+.verse-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 1px solid rgba(201,168,76,0.5); background: rgba(201,168,76,0.08);
+  font-family: 'DM Mono', monospace; font-size: 11px; color: var(--gold);
+  margin-right: 8px; vertical-align: middle;
+}
+.verse-translation {
+  font-size: 13px; color: var(--body); line-height: 1.7;
+  border-left: 2px solid rgba(26,107,74,0.4); padding-left: 12px; margin-top: 12px;
+}
+.verse-separator {
+  display: flex; justify-content: center; align-items: center; margin: 8px 0; opacity: 0.35;
+}
+.verse-separator::before, .verse-separator::after {
+  content: ''; width: 40px; height: 1px; background: var(--gold);
+}
+.verse-separator svg { width: 12px; height: 12px; fill: var(--gold); margin: 0 8px; }
+
+/* ==========================================================================
+   TEMPLATE 2: DAILY VERSE CARD
+   ========================================================================== */
+.t2-card-dark { width: 540px; height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 40px;}
+.ayah-badge { font-family: 'Plus Jakarta Sans'; font-size: 10px; letter-spacing: 3px; color: #8B6914; text-transform: uppercase; margin-top: 8px; }
+.t2-arabic { max-width: 80%; color: var(--arabic-text); margin: 40px 0; }
+.t2-divider { display: flex; align-items: center; width: 200px; opacity: 0.4; margin: 0 auto 20px; }
+.t2-divider .gold-line { width: 100%; }
+.t2-translation { font-size: 18px; color: rgba(240,236,216,0.7); max-width: 70%; margin-bottom: 20px; }
+.t2-ref { font-family: 'DM Mono'; font-size: 12px; color: var(--green); letter-spacing: 1.5px; }
+.t2-brand { margin-top: auto; padding-top: 20px; display: flex; align-items: center; gap: 8px; color: var(--gold); font-size: 14px; border-top: 1px solid var(--border-gold); width: 100%; justify-content: center;}
+
+/* Parchment version */
+.t2-card-parch { width: 540px; height: 540px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; border: 16px solid transparent; }
+.t2-card-parch::before {
+  content: ''; position: absolute; inset: 16px; border: 2px solid var(--border-gold); pointer-events: none;
+}
+.t2-parch-arabic { font-family: 'Scheherazade New', serif; font-size: 40px; color: var(--arabic-text); text-align: center; margin-bottom: 24px; direction: rtl;}
+.t2-parch-trans { font-family: 'Plus Jakarta Sans'; font-style: italic; font-size: 16px; color: var(--body); }
+
+/* ==========================================================================
+   TEMPLATE 3: SURAH TITLE CARD
+   ========================================================================== */
+.t3-surah { width: 390px; height: 200px; background: #0D1A10; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.t3-bg-num { position: absolute; right: -20px; bottom: -40px; font-family: 'Reem Kufi'; font-size: 200px; color: var(--green); opacity: 0.12; line-height: 1;}
+.t3-arch { position: absolute; inset: 20px; border: 1px solid var(--border-gold); border-radius: 40px 40px 0 0; }
+.t3-content { position: relative; z-index: 10; text-align: center; }
+.t3-badge { display: inline-flex; width: 32px; height: 32px; border: 1px solid var(--gold); color: var(--gold); align-items: center; justify-content: center; font-family: 'Reem Kufi'; transform: rotate(45deg); margin-bottom: 12px; }
+.t3-badge span { transform: rotate(-45deg); }
+.t3-ar-name { color: var(--gold); margin-bottom: 4px; }
+.t3-en-name { font-weight: 600; font-size: 18px; color: var(--arabic-text); margin-bottom: 2px; }
+.t3-meaning { font-size: 12px; color: var(--caption); text-transform: uppercase; margin-bottom: 12px; }
+.t3-meta { font-family: 'DM Mono'; font-size: 10px; color: var(--caption); letter-spacing: 1.5px; }
+
+/* ==========================================================================
+   TEMPLATE 4: WORD-BY-WORD BREAKDOWN
+   ========================================================================== */
+.t4-wbw { width: 390px; height: 600px; padding: 20px; }
+.t4-verse-box { background: var(--surface); padding: 20px; border-radius: 16px; color: var(--arabic-text); text-align: center; margin-bottom: 24px; }
+.t4-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; direction: rtl; }
+.t4-tile { background: var(--surface-2); border: 0.5px solid var(--border-gold); border-radius: 10px; padding: 12px 4px; text-align: center; position: relative; }
+.t4-tile:hover { border-color: var(--gold); background: rgba(201,168,76,0.1); }
+.t4-dot { position: absolute; top: 6px; left: 6px; width: 6px; height: 6px; border-radius: 50%; }
+.t4-dot.noun { background: var(--gold); }
+.t4-dot.verb { background: var(--green); }
+.t4-ar { font-family: 'Amiri', serif; font-size: 18px; color: var(--arabic-text); margin-bottom: 8px; }
+.t4-root { font-family: 'Reem Kufi'; font-size: 10px; color: var(--gold); margin-bottom: 4px; }
+.t4-en { font-size: 10px; color: var(--body); }
+
+/* ==========================================================================
+   TEMPLATE 6: TAJWEED LESSON CARD
+   ========================================================================== */
+.t6-tajweed { width: 390px; height: 480px; }
+.t6-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; background: rgba(243, 156, 18, 0.2); border-bottom: 1px solid rgba(243, 156, 18, 0.4); }
+.t6-title-en { font-weight: 700; font-size: 16px; color: #fff; }
+.t6-title-ar { font-family: 'Noto Naskh Arabic'; font-size: 14px; color: var(--tajweed-ghunnah); }
+.t6-content { padding: 30px 20px; }
+.t6-verse { text-align: center; margin-bottom: 30px; }
+.hl-ghunnah { border-bottom: 3px solid var(--tajweed-ghunnah); background: rgba(243,156,18,0.12); border-radius: 4px; padding: 0 4px;}
+.t6-explain { font-size: 13px; color: var(--body); background: var(--surface); padding: 16px; border-radius: 12px; margin-bottom: 24px; line-height: 1.6;}
+.t6-btn { display: flex; align-items: center; justify-content: center; gap: 8px; background: var(--green); color: #fff; padding: 14px; border-radius: 100px; font-weight: 600; font-size: 14px; cursor: pointer;}
+</style>
+</head>
+<body>
+
+<h1 class="page-title">TILAWA UI Templates</h1>
+
+<div class="container">
+
+  <!-- TEMPLATE 1: MUSHAF -->
+  <div class="device t1-mushaf">
+    <div class="bg-starfield"></div>
+    <div class="t1-glow"></div>
+    <div class="t1-content">
+      <div class="bismillah-block">
+        <svg class="star-icon" viewBox="0 0 24 24"><path d="M12 2l2.4 7.6h8l-6.4 4.8 2.4 7.6-6.4-4.8-6.4 4.8 2.4-7.6-6.4-4.8h8z"/></svg>
+        <div class="ar-display-md bismillah-text">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
+        <div class="gold-divider-container">
+          <div class="gold-line"></div>
+          <svg class="star-icon" style="width:10px;height:10px" viewBox="0 0 24 24"><path d="M12 2l2.4 7.6h8l-6.4 4.8 2.4 7.6-6.4-4.8-6.4 4.8 2.4-7.6-6.4-4.8h8z"/></svg>
+          <div class="gold-line"></div>
+        </div>
+      </div>
+
+      <div class="verse-block">
+        <div class="ar-display-sm verse-arabic">
+          الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ
+          <span class="verse-badge">١</span>
+        </div>
+        <div class="verse-translation">
+          [All] praise is [due] to Allah, Lord of the worlds -
+        </div>
+      </div>
+      
+      <div class="verse-separator">
+        <svg viewBox="0 0 24 24"><path d="M12 2l2.4 7.6h8l-6.4 4.8 2.4 7.6-6.4-4.8-6.4 4.8 2.4-7.6-6.4-4.8h8z"/></svg>
+      </div>
+
+      <div class="verse-block">
+        <div class="ar-display-sm verse-arabic">
+          الرَّحْمَٰنِ الرَّحِيمِ
+          <span class="verse-badge">٢</span>
+        </div>
+        <div class="verse-translation">
+          The Entirely Merciful, the Especially Merciful,
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEMPLATE 2A: SHAREABLE CARD (DARK) -->
+  <div class="device t2-card-dark">
+    <div class="bg-starfield"></div>
+    <div class="t1-glow"></div>
+    
+    <svg class="star-icon" style="width:32px;height:32px" viewBox="0 0 24 24"><path d="M12 2l2.4 7.6h8l-6.4 4.8 2.4 7.6-6.4-4.8-6.4 4.8 2.4-7.6-6.4-4.8h8z"/></svg>
+    <div class="ayah-badge">Ayah of the day</div>
+    
+    <div class="ar-display-lg t2-arabic">
+      اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ
+    </div>
+    
+    <div class="t2-divider">
+      <div class="gold-line"></div>
+      <div style="width:8px;height:8px;background:var(--gold);transform:rotate(45deg);margin:0 8px;"></div>
+      <div class="gold-line"></div>
+    </div>
+    
+    <div class="t2-translation">
+      "Allah - there is no deity except Him, the Ever-Living, the Sustainer of [all] existence."
+    </div>
+    <div class="t2-ref">Al-Baqarah 2:255</div>
+    
+    <div class="t2-brand">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="var(--gold)"><path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-1-11v4h2v-4h-2zm0-4v2h2V7h-2z"/></svg>
+      TILAWA
+    </div>
+  </div>
+
+  <!-- TEMPLATE 2B: SHAREABLE CARD (PARCHMENT) -->
+  <div class="device t2-card-parch" data-theme="parchment">
+    <svg class="star-icon" style="width:32px;height:32px" viewBox="0 0 24 24"><path d="M12 2l2.4 7.6h8l-6.4 4.8 2.4 7.6-6.4-4.8-6.4 4.8 2.4-7.6-6.4-4.8h8z"/></svg>
+    <div class="ayah-badge" style="color:var(--caption)">Ayah of the day</div>
+    
+    <div class="t2-parch-arabic" style="margin-top:30px;">
+      إِنَّ مَعَ الْعُسْرِ يُسْرًا
+    </div>
+    
+    <div class="t2-parch-trans" style="margin-bottom:20px;">
+      "Indeed, with hardship [will be] ease."
+    </div>
+    <div class="t2-ref" style="color:var(--gold);">Ash-Sharh 94:6</div>
+  </div>
+
+  <!-- TEMPLATE 3: SURAH TITLE CARD -->
+  <div class="device t3-surah">
+    <div class="t3-bg-num">١٨</div>
+    <div class="t3-arch"></div>
+    <div class="t3-content">
+      <div class="t3-badge"><span>١٨</span></div>
+      <div class="ar-title t3-ar-name">سُورَةُ الْكَهْفِ</div>
+      <div class="t3-en-name">Al-Kahf</div>
+      <div class="t3-meaning">THE CAVE</div>
+      <div class="t3-meta">MECCAN · 110 VERSES · JUZ 15</div>
+    </div>
+  </div>
+
+  <!-- TEMPLATE 4: WORD BREAKDOWN -->
+  <div class="device t4-wbw">
+    <div class="ar-display-sm t4-verse-box">
+      الْحَمْدُ لِلَّهِ رَبِّ الْعَالَمِينَ
+    </div>
+    <div class="t4-grid">
+      <div class="t4-tile">
+        <div class="t4-dot noun"></div>
+        <div class="t4-ar">الْعَالَمِينَ</div>
+        <div class="t4-root">ع ل م</div>
+        <div class="t4-en">the worlds</div>
+      </div>
+      <div class="t4-tile">
+        <div class="t4-dot noun"></div>
+        <div class="t4-ar">رَبِّ</div>
+        <div class="t4-root">ر ب ب</div>
+        <div class="t4-en">Lord (of)</div>
+      </div>
+      <div class="t4-tile">
+        <div class="t4-dot verb"></div>
+        <div class="t4-ar">لِلَّهِ</div>
+        <div class="t4-root">أ ل ه</div>
+        <div class="t4-en">be to Allah</div>
+      </div>
+      <div class="t4-tile">
+        <div class="t4-dot noun"></div>
+        <div class="t4-ar">الْحَمْدُ</div>
+        <div class="t4-root">ح م د</div>
+        <div class="t4-en">All praise</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEMPLATE 6: TAJWEED LESSON -->
+  <div class="device t6-tajweed">
+    <div class="t6-header">
+      <div class="t6-title-en">GHUNNAH </div>
+      <div class="t6-title-ar">الغُنَّة</div>
+    </div>
+    <div class="t6-content">
+      <div class="ar-display-sm t6-verse">
+        إِنَّ <span class="hl-ghunnah">الَّذِينَ</span> آمَنُوا
+      </div>
+      <div class="t6-explain">
+        <b>Ghunnah</b> (nasal sound) must be held for 2 beats on any noon or meem with shaddah.
+      </div>
+      <div class="t6-btn">
+        <svg fill="#fff" width="16" height="16" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+        Hear the difference
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

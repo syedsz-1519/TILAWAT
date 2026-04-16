@@ -1,0 +1,3 @@
+[flake8]
+ignore = E,W,F,C,N
+max-line-length = 999
