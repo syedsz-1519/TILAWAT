@@ -15,6 +15,8 @@ import TajweedQuiz from "@/pages/TajweedQuiz";
 import BookmarksPage from "@/pages/BookmarksPage";
 import Dashboard from "@/pages/Dashboard";
 import HadithLibrary from "@/pages/HadithLibrary";
+import RecitationPage from "@/pages/RecitationPage";
+import VerseCreator from "@/components/mushaf/VerseCreator";
 import OmarVoiceAgent from "@/components/OmarVoiceAgent";
 import { Menu } from "lucide-react";
 
@@ -33,6 +35,8 @@ function AnimatedRoutes() {
         <Route path="/hadiths" element={<HadithLibrary />} />
         <Route path="/bookmarks" element={<BookmarksPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/verse-creator" element={<VerseCreator />} />
+        <Route path="/recitation/:surahId" element={<RecitationPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

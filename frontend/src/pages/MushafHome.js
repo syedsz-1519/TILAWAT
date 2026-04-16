@@ -104,6 +104,12 @@ export default function MushafHome() {
                        <span className="text-white/60">{surah.revelation_place === "makkah" ? "Meccan" : "Medinan"}</span>
                     </div>
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); navigate(`/recitation/${surah.id}`); }}
+                        className="text-[10px] bg-[#E6C364]/10 text-[#E6C364] px-3 py-1 rounded-full border border-[#E6C364]/20 hover:bg-[#E6C364]/20 transition-colors"
+                      >
+                        ▶ Recite
+                      </button>
                       <span className="text-[10px] bg-white/5 text-white/70 px-2 py-1 rounded-full border border-white/5">{surah.verses_count} Ayahs</span>
                     </div>
                   </div>

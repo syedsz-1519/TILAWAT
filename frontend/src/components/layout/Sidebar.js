@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Search, Mic, Bookmark, Menu, X, ChevronRight, LayoutDashboard, BookOpen } from "lucide-react";
+import { Search, Mic, Bookmark, Menu, X, ChevronRight, LayoutDashboard, BookOpen, Palette } from "lucide-react";
 import api from "@/lib/api";
 
 const NAV_ITEMS = [
@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { path: "/search", icon: Search, label: "Search" },
   { path: "/tajweed", icon: Mic, label: "Tajweed" },
   { path: "/hadiths", icon: BookOpen, label: "Hadiths" },
+  { path: "/verse-creator", icon: Palette, label: "Verse Studio" },
   { path: "/bookmarks", icon: Bookmark, label: "Bookmarks" },
 ];
 

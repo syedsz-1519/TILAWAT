@@ -174,8 +174,15 @@ export default function VerseCreator() {
             {isExporting ? <CheckCircle className="w-4 h-4 text-green-700"/> : <Download className="w-4 h-4"/>} 
             {isExporting ? "Success!" : "Render Image"}
           </Button>
-          <Button variant="outline" className="flex-1 border-white/10 text-[#E5E2E1] hover:bg-white/5 h-12 rounded-xl transition-all hover:scale-[1.02] flex gap-2">
-            <Share2 className="w-4 h-4"/> Publish
+          <Button variant="outline" onClick={async () => {
+            const text = `${verse.arabic}\n\n"${verse.translation}"\n\n— ${verse.reference}`;
+            if (navigator.share) {
+              try { await navigator.share({ title: verse.reference, text, url: window.location.href }); } catch(e) {}
+            } else {
+              try { await navigator.clipboard.writeText(text); alert("Verse copied to clipboard!"); } catch(e) {}
+            }
+          }} className="flex-1 border-white/10 text-[#E5E2E1] hover:bg-white/5 h-12 rounded-xl transition-all hover:scale-[1.02] flex gap-2">
+            <Share2 className="w-4 h-4"/> Share
           </Button>
         </CardFooter>
       </Card>
