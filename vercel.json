@@ -15,23 +15,12 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/backend/server.py"
+      "dest": "backend/server.py"
     },
-    {
-      "src": "/static/(.*)",
-      "dest": "/frontend/build/static/$1"
-    },
-    {
-      "src": "/manifest.json",
-      "dest": "/frontend/build/manifest.json"
-    },
-    {
-      "src": "/favicon.ico",
-      "dest": "/frontend/build/favicon.ico"
-    },
+    { "handle": "filesystem" },
     {
       "src": "/(.*)",
-      "dest": "/frontend/build/index.html"
+      "dest": "/index.html"
     }
   ]
 }
