@@ -137,3 +137,237 @@
   background: linear-gradient(135deg, #E6C364, #C9A84C);
   color: #503D00; border-radius: 12px; padding: 6px 16px;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   TILAWA — Additional Component Styles
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.App {
+  min-height: 100vh;
+  background-color: var(--bg-main);
+}
+
+/* ── Verse Card Export ── */
+#verse-card {
+  font-smooth: always;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Audio Visualizer ── */
+.audio-bar {
+  width: 3px;
+  height: 20px;
+  background: var(--gold);
+  border-radius: 2px;
+  animation: audioWave 0.5s ease-in-out infinite alternate;
+}
+.audio-bar:nth-child(1) { animation-delay: 0s; }
+.audio-bar:nth-child(2) { animation-delay: 0.1s; }
+.audio-bar:nth-child(3) { animation-delay: 0.2s; }
+.audio-bar:nth-child(4) { animation-delay: 0.1s; }
+.audio-bar:nth-child(5) { animation-delay: 0s; }
+
+@keyframes audioWave {
+  from { height: 8px; }
+  to   { height: 24px; }
+}
+
+/* ── Search Highlight ── */
+.search-highlight {
+  background: rgba(230, 195, 100, 0.25);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* ── Bismillah Ornament ── */
+.bismillah-ornament { position: relative; }
+.bismillah-ornament::before,
+.bismillah-ornament::after {
+  content: '❁';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gold);
+  opacity: 0.5;
+}
+.bismillah-ornament::before { left: -2rem; }
+.bismillah-ornament::after  { right: -2rem; }
+
+/* ── Surah Divider ── */
+.surah-divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.surah-divider::before,
+.surah-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, var(--border-default), transparent);
+}
+
+/* ── Responsive Arabic Typography ── */
+@media (max-width: 480px) {
+  .arabic-lg { font-size: 1.5rem; line-height: 2; }
+  .arabic-md { font-size: 1.25rem; line-height: 1.8; }
+}
+
+/* ── Card Hover Glow ── */
+.card-glow { transition: box-shadow 0.3s ease; }
+.card-glow:hover { box-shadow: 0 0 20px rgba(44, 76, 59, 0.15); }
+
+/* ── Reading Progress Bar ── */
+.reading-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  background: var(--gold);
+  z-index: 100;
+  transition: width 0.1s ease;
+}
+
+/* ── Tooltips ── */
+.tooltip { position: relative; }
+.tooltip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 0.75rem;
+  background: var(--text-primary);
+  color: white;
+  font-size: 0.75rem;
+  border-radius: 0.5rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.tooltip:hover::after { opacity: 1; }
+
+/* ── Focus States ── */
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* ── Print / Card Export ── */
+@media print {
+  .bottom-nav,
+  .fab,
+  header { display: none !important; }
+}
+
+/* ── Safe Area (iOS home bar) ── */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .bottom-nav {
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* ── Word-by-Word Layout ── */
+.word-by-word {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  direction: rtl;
+  justify-content: flex-start;
+}
+.word-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+.word-arabic {
+  font-family: 'Amiri Quran', 'Amiri', serif;
+  font-size: 1.5rem;
+  color: var(--text-primary);
+}
+.word-translation {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  direction: ltr;
+}
+
+/* ── Empty State ── */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+.empty-state-icon {
+  width: 4rem;
+  height: 4rem;
+  background: rgba(230, 195, 100, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+/* ── Skeleton (light-theme aware) ── */
+@keyframes skeleton-loading {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── Verse Selection ── */
+.verse-selected {
+  background: rgba(230, 195, 100, 0.1);
+  border-color: var(--gold) !important;
+}
+
+/* ── RTL / LTR helpers ── */
+.rtl-container { direction: rtl; text-align: right; }
+.ltr           { direction: ltr; text-align: left; }
+
+/* ══ Light-Green (Sage / Meadow) App Theme ═══════════════════════════════════
+   Add class="theme-light-green" to a wrapping div or <body> to activate.
+   ══════════════════════════════════════════════════════════════════════════ */
+.theme-light-green {
+  --bg-main: #f4f9f5;
+  --bg-surface: #ffffff;
+  --bg-surface-hover: #edf5ef;
+  --bg-surface-high: #deeee2;
+  --bg-surface-highest: #cce5d2;
+  --border-default: rgba(34, 139, 87, 0.14);
+  --border-hover: rgba(34, 139, 87, 0.32);
+  --text-primary: #162b1e;
+  --text-secondary: #3d6b4a;
+  --text-muted: #6f9e7a;
+  --gold: #C9A84C;
+  --gold-hover: #dfc06a;
+}
+.theme-light-green .card-surface {
+  background: #ffffff;
+  border-color: rgba(34, 139, 87, 0.14);
+}
+.theme-light-green .card-surface:hover {
+  background: #edf5ef;
+  border-color: rgba(34, 139, 87, 0.32);
+}
+.theme-light-green .card-glow:hover {
+  box-shadow: 0 0 24px rgba(34, 139, 87, 0.18);
+}
+.theme-light-green .bottom-nav {
+  background: linear-gradient(to top, #deeee2, #f4f9f5);
+  box-shadow: 0 -4px 20px rgba(34, 139, 87, 0.12);
+}
+.theme-light-green .bottom-nav a { color: var(--text-secondary); }
+.theme-light-green .bottom-nav a:hover,
+.theme-light-green .bottom-nav a.active { color: #1d7a44; }
+.theme-light-green .skeleton {
+  background: linear-gradient(90deg, #e6f2ea 25%, #f1f8f3 50%, #e6f2ea 75%);
+  background-size: 200% 100%;
+  animation: skeleton-loading 1.5s infinite;
+}

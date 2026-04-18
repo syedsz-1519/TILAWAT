@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '../ui/card
 import { Button } from '../ui/button';
 import { Label } from '../ui/label';
 import { Slider } from '../ui/slider';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 import { Download, Share2, Palette, Type, CheckCircle, Sparkles, Loader2 } from 'lucide-react';
 import { Input } from '../ui/input';
 import html2canvas from 'html2canvas';
@@ -26,10 +25,12 @@ export default function VerseCreator() {
   });
 
   const themes = {
-    dark: "bg-slate-900 text-white border-slate-700",
-    light: "bg-white text-slate-800 border-slate-200",
-    emerald: "bg-emerald-900 text-emerald-50 border-emerald-700",
-    royal: "bg-indigo-950 text-indigo-50 border-indigo-800"
+    dark:     { classes: "bg-slate-900 text-white border-slate-700",            label: "Midnight",       swatch: "#0f172a", accent: "#E6C364" },
+    light:    { classes: "bg-white text-slate-800 border-slate-200",             label: "Ivory",          swatch: "#ffffff", accent: "#6b7280" },
+    verdant:  { classes: "bg-white text-[#162b1e] border-[#a8d5b5]",             label: "Verdant Meadow", swatch: "#e8f5ec", accent: "#228B57" },
+    emerald:  { classes: "bg-emerald-900 text-emerald-50 border-emerald-700",    label: "Emerald Oasis",  swatch: "#064e3b", accent: "#34d399" },
+    royal:    { classes: "bg-indigo-950 text-indigo-50 border-indigo-800",        label: "Royal Indigo",   swatch: "#1e1b4b", accent: "#818cf8" },
+    parchment: { classes: "bg-[#f5ead8] text-[#3d2b1f] border-[#d4a96a]",       label: "Parchment",      swatch: "#f5ead8", accent: "#C9A84C" },
   };
 
   const generateVerseWithAI = async () => {
@@ -111,17 +112,25 @@ export default function VerseCreator() {
 
           <div className="space-y-4">
             <Label className="uppercase text-[10px] tracking-widest text-[#9a9a9a]">Color Atmosphere</Label>
-            <Select value={theme} onValueChange={setTheme}>
-              <SelectTrigger className="h-12 bg-black/40 border-white/10 text-[#E5E2E1] focus:ring-[#E6C364]/50 rounded-xl">
-                <SelectValue placeholder="Select atmospheric theme" />
-              </SelectTrigger>
-              <SelectContent className="bg-[#0F0F16] border-white/10 text-[#E5E2E1]">
-                <SelectItem value="dark">Midnight Void (Default)</SelectItem>
-                <SelectItem value="light">Pristine Ivory</SelectItem>
-                <SelectItem value="emerald">Emerald Oasis (Traditional)</SelectItem>
-                <SelectItem value="royal">Royal Indigo (Premium)</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="grid grid-cols-3 gap-2">
+              {Object.entries(themes).map(([key, t]) => (
+                <button
+                  key={key}
+                  onClick={() => setTheme(key)}
+                  className={`flex flex-col items-center gap-1.5 p-2 rounded-xl border transition-all ${
+                    theme === key
+                      ? 'border-[#E6C364] bg-[#E6C364]/10 scale-[1.03] shadow-[0_0_10px_rgba(230,195,100,0.2)]'
+                      : 'border-white/10 bg-black/20 hover:border-white/20'
+                  }`}
+                >
+                  <div
+                    className="w-8 h-8 rounded-lg border border-white/20 shadow-inner"
+                    style={{ background: t.swatch }}
+                  />
+                  <span className="text-[9px] text-[#9a9a9a] font-medium leading-tight text-center">{t.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -194,18 +203,36 @@ export default function VerseCreator() {
         
         <div ref={cardRef}>
           <Card 
-            className={`w-full max-w-2xl min-h-[400px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.7)] transition-all duration-[800ms] ease-[cubic-bezier(0.23,1,0.32,1)] rounded-[2rem] overflow-hidden border-2 hover:rotate-y-2 hover:-rotate-x-2 relative z-10 flex flex-col justify-center ${themes[theme].split(' ').join(' ')}`}
+            className={`w-full max-w-2xl min-h-[400px] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.7)] transition-all duration-[800ms] ease-[cubic-bezier(0.23,1,0.32,1)] rounded-[2rem] overflow-hidden border-2 relative z-10 flex flex-col justify-center card-glow ${themes[theme].classes}`}
           >
-          {/* Internal gradient lighting overlay */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/40 pointer-events-none"></div>
+          {/* Verdant green top accent bar */}
+          {theme === "verdant" && (
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#a8d5b5] via-[#228B57] to-[#a8d5b5]" />
+          )}
+          {/* Parchment texture overlay */}
+          {theme === "parchment" && (
+            <div className="absolute inset-0 bg-gradient-to-br from-[#f9f1e3] via-transparent to-[#e8d5b0]/30 pointer-events-none" />
+          )}
+          {/* Dark/Royal internal lighting overlay */}
+          {(theme === "dark" || theme === "royal" || theme === "emerald") && (
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-black/40 pointer-events-none" />
+          )}
           
           <CardContent className="p-12 md:p-16 space-y-10 relative z-10 flex flex-col items-center text-center">
+            {/* Arabic ornament line for verdant/parchment */}
+            {(theme === "verdant" || theme === "parchment") && (
+              <div className="surah-divider w-full opacity-40" />
+            )}
             {/* Calligraphic Arabic */}
             <div 
               className="font-arabic leading-[1.8] tracking-wide w-full" 
               style={{ 
                 fontSize: `${fontSize[0]}px`,
-                textShadow: theme === "dark" || theme === "royal" ? "0 4px 20px rgba(255,255,255,0.1)" : "none"
+                textShadow: (theme === "dark" || theme === "royal" || theme === "emerald")
+                  ? "0 4px 20px rgba(255,255,255,0.1)"
+                  : theme === "verdant"
+                  ? "0 2px 12px rgba(34,139,87,0.15)"
+                  : "none"
               }}
               dir="rtl"
             >
@@ -218,7 +245,7 @@ export default function VerseCreator() {
             {/* English & Ref */}
             <div className="space-y-4">
               <p className="text-xl md:text-2xl font-light opacity-90 leading-relaxed font-serif max-w-lg mx-auto">
-                "{verse.translation}"
+                &ldquo;{verse.translation}&rdquo;
               </p>
               <div className="inline-block mt-4">
                 <p className="text-xs opacity-60 font-medium uppercase tracking-[0.2em] border border-current/20 px-4 py-1.5 rounded-full">
